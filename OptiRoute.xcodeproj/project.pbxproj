@@ -24,6 +24,7 @@
 		AFA590592438A33600FF4BDC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		AFA5905C2438A33600FF4BDC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AFA5905E2438A33600FF4BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AFA590642438A40100FF4BDC /* OptiRoute.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OptiRoute.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +57,7 @@
 		AFA5904F2438A33200FF4BDC /* OptiRoute */ = {
 			isa = PBXGroup;
 			children = (
+				AFA590642438A40100FF4BDC /* OptiRoute.entitlements */,
 				AFA590502438A33200FF4BDC /* AppDelegate.swift */,
 				AFA590522438A33200FF4BDC /* SceneDelegate.swift */,
 				AFA590542438A33200FF4BDC /* ViewController.swift */,
@@ -284,6 +286,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = OptiRoute/OptiRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3Q75G44A33;
 				INFOPLIST_FILE = OptiRoute/Info.plist;
@@ -293,6 +296,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = pt.carlneto.OptiRoute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -302,6 +306,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = OptiRoute/OptiRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3Q75G44A33;
 				INFOPLIST_FILE = OptiRoute/Info.plist;
@@ -311,6 +316,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = pt.carlneto.OptiRoute;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
