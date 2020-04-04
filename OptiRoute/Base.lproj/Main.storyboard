@@ -35,18 +35,18 @@
                                             <action selector="sampleTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="Ndl-I6-gI4"/>
                                         </connections>
                                     </button>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aFp-mh-qwr" userLabel="Stop">
-                                        <rect key="frame" x="75" y="5" width="74.5" height="30"/>
-                                        <state key="normal" title="Stop"/>
-                                        <connections>
-                                            <action selector="stopTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="0aI-2h-UCL"/>
-                                        </connections>
-                                    </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bbG-my-Eqz" userLabel="Start">
-                                        <rect key="frame" x="149.5" y="5" width="75" height="30"/>
+                                        <rect key="frame" x="75" y="5" width="74.5" height="30"/>
                                         <state key="normal" title="Start"/>
                                         <connections>
                                             <action selector="startTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="Mlz-hY-92t"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aFp-mh-qwr" userLabel="Stop">
+                                        <rect key="frame" x="149.5" y="5" width="75" height="30"/>
+                                        <state key="normal" title="Stop"/>
+                                        <connections>
+                                            <action selector="stopTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="0aI-2h-UCL"/>
                                         </connections>
                                     </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XYJ-ce-sTm" userLabel="Clear">

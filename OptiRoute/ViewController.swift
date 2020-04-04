@@ -44,7 +44,7 @@ class ViewController: UIViewController {
     
     private func drawCities() {
         self.mapView.layer.sublayers?.removeAll()
-        self.locations.forEach { (location) in
+        self.locations.forEach { location in
             let circle = UIBezierPath.init(arcCenter: location, radius: 5, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
             let circleLayer = CAShapeLayer()
             circleLayer.path = circle.cgPath
@@ -116,7 +116,7 @@ class ViewController: UIViewController {
 
     @IBAction func sampleTap() {
         var locs: [CGPoint] = []
-        Node.nodes.forEach { locs.append(CGPoint(x: $0.x, y: $0.y))}
+        Node.nodes.forEach { locs.append(CGPoint(x: $0.location.x, y: $0.location.y))}
         locations = locs
     }
 }
