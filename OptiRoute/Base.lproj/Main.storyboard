@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13122.16" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13104.12"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16086"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -9,16 +10,93 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="OptiRoute" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
-                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                        <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <color key="backgroundColor" xcode11CocoaTouchSystemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                        <subviews>
+                            <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VyE-V0-gjg" userLabel="Map">
+                                <rect key="frame" x="0.0" y="44" width="414" height="778"/>
+                                <color key="backgroundColor" systemColor="systemBackgroundColor" cocoaTouchSystemColor="whiteColor"/>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Generation: 0" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bR0-OC-vCq" userLabel="Generation">
+                                <rect key="frame" x="12" y="789.5" width="390" height="20.5"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" systemColor="secondaryLabelColor" red="0.23529411759999999" green="0.23529411759999999" blue="0.26274509800000001" alpha="0.59999999999999998" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <stackView opaque="NO" contentMode="scaleToFill" distribution="fillEqually" alignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="iNm-zb-34t" userLabel="Footer">
+                                <rect key="frame" x="20" y="822" width="374" height="40"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FVk-bE-SxQ" userLabel="Sample">
+                                        <rect key="frame" x="0.0" y="5" width="75" height="30"/>
+                                        <state key="normal" title="Sample"/>
+                                        <connections>
+                                            <action selector="sampleTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="Ndl-I6-gI4"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="aFp-mh-qwr" userLabel="Stop">
+                                        <rect key="frame" x="75" y="5" width="74.5" height="30"/>
+                                        <state key="normal" title="Stop"/>
+                                        <connections>
+                                            <action selector="stopTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="0aI-2h-UCL"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bbG-my-Eqz" userLabel="Start">
+                                        <rect key="frame" x="149.5" y="5" width="75" height="30"/>
+                                        <state key="normal" title="Start"/>
+                                        <connections>
+                                            <action selector="startTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="Mlz-hY-92t"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XYJ-ce-sTm" userLabel="Clear">
+                                        <rect key="frame" x="224.5" y="5" width="74.5" height="30"/>
+                                        <state key="normal" title="Clear"/>
+                                        <connections>
+                                            <action selector="clearTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="27d-NY-MpR"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gFy-z8-oNx" userLabel="Undo">
+                                        <rect key="frame" x="299" y="5" width="75" height="30"/>
+                                        <state key="normal" title="Undo"/>
+                                        <connections>
+                                            <action selector="undoTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="Hwl-OS-8sC"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="40" id="yVo-87-h60"/>
+                                </constraints>
+                            </stackView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="iNm-zb-34t" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="BT1-Yj-W6h"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="VyE-V0-gjg" secondAttribute="trailing" id="HnN-vD-rFk"/>
+                            <constraint firstItem="VyE-V0-gjg" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" id="OkJ-KS-5Je"/>
+                            <constraint firstItem="VyE-V0-gjg" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="W3W-fK-Cas"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="bR0-OC-vCq" secondAttribute="trailing" constant="12" id="ajN-9V-HOK"/>
+                            <constraint firstItem="bR0-OC-vCq" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="12" id="c9S-a0-zMU"/>
+                            <constraint firstItem="iNm-zb-34t" firstAttribute="top" secondItem="VyE-V0-gjg" secondAttribute="bottom" id="fMK-zg-2RE"/>
+                            <constraint firstItem="iNm-zb-34t" firstAttribute="top" secondItem="bR0-OC-vCq" secondAttribute="bottom" constant="12" id="hP1-eh-ctW"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="iNm-zb-34t" secondAttribute="trailing" constant="20" id="swS-aP-uka"/>
+                            <constraint firstItem="iNm-zb-34t" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="u7J-i7-Sqv"/>
+                        </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
+                    <connections>
+                        <outlet property="clearBtn" destination="XYJ-ce-sTm" id="lk7-sf-MOR"/>
+                        <outlet property="generationLbl" destination="bR0-OC-vCq" id="tkP-N1-jQj"/>
+                        <outlet property="mapView" destination="VyE-V0-gjg" id="BeM-tk-rII"/>
+                        <outlet property="sampleBtn" destination="FVk-bE-SxQ" id="lWf-6z-OT9"/>
+                        <outlet property="startBtn" destination="bbG-my-Eqz" id="TCq-fF-B49"/>
+                        <outlet property="stopBtn" destination="aFp-mh-qwr" id="ylY-rU-9mu"/>
+                        <outlet property="undoBtn" destination="gFy-z8-oNx" id="xXW-wf-eYn"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+            <point key="canvasLocation" x="139" y="139"/>
         </scene>
     </scenes>
 </document>

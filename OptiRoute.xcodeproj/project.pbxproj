@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AF3926522438AAD80017E6E6 /* City.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926512438AAD80017E6E6 /* City.swift */; };
+		AF3926542438AB190017E6E6 /* Chromosome.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926532438AB190017E6E6 /* Chromosome.swift */; };
+		AF3926562438AB2F0017E6E6 /* Gene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926552438AB2F0017E6E6 /* Gene.swift */; };
+		AF3926582438AB6B0017E6E6 /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */; };
+		AF39265C2438AEDF0017E6E6 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AF39265B2438AEDE0017E6E6 /* Default-568h@2x.png */; };
 		AFA590512438A33200FF4BDC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590502438A33200FF4BDC /* AppDelegate.swift */; };
 		AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590522438A33200FF4BDC /* SceneDelegate.swift */; };
 		AFA590552438A33200FF4BDC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590542438A33200FF4BDC /* ViewController.swift */; };
@@ -16,6 +21,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AF3926512438AAD80017E6E6 /* City.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = City.swift; sourceTree = "<group>"; };
+		AF3926532438AB190017E6E6 /* Chromosome.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chromosome.swift; sourceTree = "<group>"; };
+		AF3926552438AB2F0017E6E6 /* Gene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gene.swift; sourceTree = "<group>"; };
+		AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneticAlgorithm.swift; sourceTree = "<group>"; };
+		AF39265B2438AEDE0017E6E6 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		AFA5904D2438A33200FF4BDC /* OptiRoute.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OptiRoute.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFA590502438A33200FF4BDC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AFA590522438A33200FF4BDC /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -38,6 +48,30 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AF3926592438AB740017E6E6 /* GeneticAlgorithm */ = {
+			isa = PBXGroup;
+			children = (
+				AF3926532438AB190017E6E6 /* Chromosome.swift */,
+				AF3926552438AB2F0017E6E6 /* Gene.swift */,
+				AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */,
+			);
+			path = GeneticAlgorithm;
+			sourceTree = "<group>";
+		};
+		AF39265A2438AC0C0017E6E6 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				AFA590502438A33200FF4BDC /* AppDelegate.swift */,
+				AFA590522438A33200FF4BDC /* SceneDelegate.swift */,
+				AFA5905E2438A33600FF4BDC /* Info.plist */,
+				AFA590642438A40100FF4BDC /* OptiRoute.entitlements */,
+				AFA590592438A33600FF4BDC /* Assets.xcassets */,
+				AF39265B2438AEDE0017E6E6 /* Default-568h@2x.png */,
+				AFA5905B2438A33600FF4BDC /* LaunchScreen.storyboard */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
 		AFA590442438A33200FF4BDC = {
 			isa = PBXGroup;
 			children = (
@@ -57,14 +91,11 @@
 		AFA5904F2438A33200FF4BDC /* OptiRoute */ = {
 			isa = PBXGroup;
 			children = (
-				AFA590642438A40100FF4BDC /* OptiRoute.entitlements */,
-				AFA590502438A33200FF4BDC /* AppDelegate.swift */,
-				AFA590522438A33200FF4BDC /* SceneDelegate.swift */,
+				AF3926592438AB740017E6E6 /* GeneticAlgorithm */,
+				AF39265A2438AC0C0017E6E6 /* Resources */,
+				AF3926512438AAD80017E6E6 /* City.swift */,
 				AFA590542438A33200FF4BDC /* ViewController.swift */,
 				AFA590562438A33200FF4BDC /* Main.storyboard */,
-				AFA590592438A33600FF4BDC /* Assets.xcassets */,
-				AFA5905B2438A33600FF4BDC /* LaunchScreen.storyboard */,
-				AFA5905E2438A33600FF4BDC /* Info.plist */,
 			);
 			path = OptiRoute;
 			sourceTree = "<group>";
@@ -128,6 +159,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				AFA5905D2438A33600FF4BDC /* LaunchScreen.storyboard in Resources */,
+				AF39265C2438AEDF0017E6E6 /* Default-568h@2x.png in Resources */,
 				AFA5905A2438A33600FF4BDC /* Assets.xcassets in Resources */,
 				AFA590582438A33200FF4BDC /* Main.storyboard in Resources */,
 			);
@@ -142,6 +174,10 @@
 			files = (
 				AFA590552438A33200FF4BDC /* ViewController.swift in Sources */,
 				AFA590512438A33200FF4BDC /* AppDelegate.swift in Sources */,
+				AF3926522438AAD80017E6E6 /* City.swift in Sources */,
+				AF3926542438AB190017E6E6 /* Chromosome.swift in Sources */,
+				AF3926562438AB2F0017E6E6 /* Gene.swift in Sources */,
+				AF3926582438AB6B0017E6E6 /* GeneticAlgorithm.swift in Sources */,
 				AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -286,10 +322,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = OptiRoute/OptiRoute.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OptiRoute/Resources/OptiRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3Q75G44A33;
-				INFOPLIST_FILE = OptiRoute/Info.plist;
+				INFOPLIST_FILE = OptiRoute/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -306,10 +342,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_ENTITLEMENTS = OptiRoute/OptiRoute.entitlements;
+				CODE_SIGN_ENTITLEMENTS = OptiRoute/Resources/OptiRoute.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3Q75G44A33;
-				INFOPLIST_FILE = OptiRoute/Info.plist;
+				INFOPLIST_FILE = OptiRoute/Resources/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
