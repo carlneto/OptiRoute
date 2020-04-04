@@ -16,7 +16,7 @@ class GeneticAlgorithm {
     let benchTimer = BenchTimer()
     var onNewGeneration: ((Chromosome, Int) -> ())?
     
-    private var population: Chromosomes = []
+    private var population = Population()
     private var evolving = false
     private var generationCounter = 1
     
@@ -25,8 +25,8 @@ class GeneticAlgorithm {
         self.population = self.randomPopulation(fromCities: self.cities)
     }
     
-    private func randomPopulation(fromCities: [City]) -> Chromosomes {
-        var result: Chromosomes = []
+    private func randomPopulation(fromCities: [City]) -> Population {
+        var result = Population()
         for _ in 0 ..< populationSize {
             let randomCities = fromCities.shuffle()
             result.append(Chromosome(cities: randomCities))
@@ -42,7 +42,7 @@ class GeneticAlgorithm {
                 let currentTotalDistance = self.population.reduce(0.0, { $0 + $1.distance })
                 let sortByFitnessDESC: (Chromosome, Chromosome) -> Bool = { $0.fitness(withTotalDistance: currentTotalDistance) > $1.fitness(withTotalDistance: currentTotalDistance) }
                 let currentGeneration = self.population.sorted(by: sortByFitnessDESC)
-                var nextGeneration: Chromosomes = []
+                var nextGeneration = Population()
                 for _ in 0 ..< self.populationSize {
                     guard
                         let parentOne = self.getParent(fromGeneration: currentGeneration, withTotalDistance: currentTotalDistance),
@@ -70,7 +70,7 @@ class GeneticAlgorithm {
         evolving = false
     }
     
-    private func getParent(fromGeneration generation: Chromosomes, withTotalDistance totalDistance: CGFloat) -> Chromosome? {
+    private func getParent(fromGeneration generation: Population, withTotalDistance totalDistance: CGFloat) -> Chromosome? {
         let fitness = CGFloat(Double(arc4random()) / Double(UINT32_MAX))
         var currentFitness: CGFloat = 0.0
         var result: Chromosome?

@@ -7,7 +7,7 @@
 //
 import UIKit
 
-typealias Chromosomes = [Chromosome]
+typealias Population = [Chromosome]
 
 class Chromosome {
     
