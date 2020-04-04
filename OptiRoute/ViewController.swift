@@ -31,6 +31,9 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+//        if #available(iOS 13.0, *) {
+//            overrideUserInterfaceStyle = .light // Always adopt a light interface style.
+//        }
         resetLocations(arr: "locations".keyForRead())
     }
     
@@ -93,7 +96,7 @@ class ViewController: UIViewController {
         geneticAlgorithm = GeneticAlgorithm(withCities: locations.map { City(location: $0) })
         geneticAlgorithm?.onNewGeneration = { (route, generation) in
             DispatchQueue.main.async {
-                self.generationLbl.text = "Generation: \(generation)"
+                self.generationLbl.text = "Generation: \(generation)"//", distance: \(Int(route.distance))"
                 self.drawRoute(route: route)
             }
         }

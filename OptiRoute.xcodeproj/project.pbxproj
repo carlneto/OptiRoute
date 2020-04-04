@@ -12,6 +12,7 @@
 		AF3926562438AB2F0017E6E6 /* Gene.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926552438AB2F0017E6E6 /* Gene.swift */; };
 		AF3926582438AB6B0017E6E6 /* GeneticAlgorithm.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */; };
 		AF39265C2438AEDF0017E6E6 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = AF39265B2438AEDE0017E6E6 /* Default-568h@2x.png */; };
+		AF4D96152438E00D0058A713 /* Population.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4D96142438E00D0058A713 /* Population.swift */; };
 		AFA590512438A33200FF4BDC /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590502438A33200FF4BDC /* AppDelegate.swift */; };
 		AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590522438A33200FF4BDC /* SceneDelegate.swift */; };
 		AFA590552438A33200FF4BDC /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFA590542438A33200FF4BDC /* ViewController.swift */; };
@@ -26,6 +27,7 @@
 		AF3926552438AB2F0017E6E6 /* Gene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Gene.swift; sourceTree = "<group>"; };
 		AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeneticAlgorithm.swift; sourceTree = "<group>"; };
 		AF39265B2438AEDE0017E6E6 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		AF4D96142438E00D0058A713 /* Population.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Population.swift; sourceTree = "<group>"; };
 		AFA5904D2438A33200FF4BDC /* OptiRoute.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = OptiRoute.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AFA590502438A33200FF4BDC /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AFA590522438A33200FF4BDC /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -54,6 +56,7 @@
 				AF3926532438AB190017E6E6 /* Chromosome.swift */,
 				AF3926552438AB2F0017E6E6 /* Gene.swift */,
 				AF3926572438AB6B0017E6E6 /* GeneticAlgorithm.swift */,
+				AF4D96142438E00D0058A713 /* Population.swift */,
 			);
 			path = GeneticAlgorithm;
 			sourceTree = "<group>";
@@ -178,6 +181,7 @@
 				AF3926542438AB190017E6E6 /* Chromosome.swift in Sources */,
 				AF3926562438AB2F0017E6E6 /* Gene.swift in Sources */,
 				AF3926582438AB6B0017E6E6 /* GeneticAlgorithm.swift in Sources */,
+				AF4D96152438E00D0058A713 /* Population.swift in Sources */,
 				AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

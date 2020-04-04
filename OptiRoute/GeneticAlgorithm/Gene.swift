@@ -12,11 +12,11 @@ protocol Fitness: Comparable {
     func weight(other: T) -> Double
 }
 
-public protocol Movable: Hashable {
+protocol Movable: Hashable {
     var movable: Bool { get set }
 }
 
-public struct Gene<T: Movable> : Hashable {
+struct Gene<T: Movable>: Hashable {
     
     public let value: T
     
@@ -25,6 +25,6 @@ public struct Gene<T: Movable> : Hashable {
     }
 }
 
-public func ==<T: Movable> (lhs: Gene<T>, rhs: Gene<T>) -> Bool {
+func ==<T: Movable> (lhs: Gene<T>, rhs: Gene<T>) -> Bool {
     return lhs.value == rhs.value
 }

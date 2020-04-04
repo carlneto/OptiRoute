@@ -9,12 +9,12 @@ import UIKit
 
 class GeneticAlgorithm {
     
-    var populationSize = 250
-    let mutationProbability = 0.02
-    let timeLimit = 10.0
+    var populationSize = 0
+    let mutationProb = 0.5
+    let timeLimit = 5.0
     let cities: [City]
     let benchTimer = BenchTimer()
-    var onNewGeneration: ((Chromosome, Int) -> ())?
+    var onNewGeneration: ( (Chromosome, Int) -> () )?
     
     private var population = Population()
     private var evolving = false
@@ -22,6 +22,8 @@ class GeneticAlgorithm {
     
     init(withCities: [City]) {
         self.cities = withCities
+        self.populationSize = Int(timeLimit * 2) * cities.count * 2
+        print("populationSize: \(populationSize)")
         self.population = self.randomPopulation(fromCities: self.cities)
     }
     
@@ -37,30 +39,33 @@ class GeneticAlgorithm {
     public func startEvolution() {
         evolving = true
         benchTimer.restart()
+        for i in 1...3 {
+            let tmp = self.randomPopulation(fromCities: self.cities)
+            let popTotalWeight = population.status.totalWeight
+            let tmpTotalWeight = tmp.status.totalWeight
+            guard tmpTotalWeight < popTotalWeight else { continue }
+            print("i: \(i)")
+            population = tmp
+        }
         DispatchQueue.global().async {
             while self.evolving {
-                let currentTotalDistance = self.population.reduce(0.0, { $0 + $1.distance })
-                let sortByFitnessDESC: (Chromosome, Chromosome) -> Bool = { $0.fitness(withTotalDistance: currentTotalDistance) > $1.fitness(withTotalDistance: currentTotalDistance) }
-                let currentGeneration = self.population.sorted(by: sortByFitnessDESC)
+                let actual = self.population.status
                 var nextGeneration = Population()
                 for _ in 0 ..< self.populationSize {
-                    guard
-                        let parentOne = self.getParent(fromGeneration: currentGeneration, withTotalDistance: currentTotalDistance),
-                        let parentTwo = self.getParent(fromGeneration: currentGeneration, withTotalDistance: currentTotalDistance)
-                        else { continue }
-                    
-                    let child = self.produceOffspring(firstParent: parentOne, secondParent: parentTwo)
-                    let finalChild = self.mutate(child: child)
-                    
-                    nextGeneration.append(finalChild)
+                    if let child = actual.population.child(mutation: self.mutationProb, weight: actual.totalWeight) {
+                        nextGeneration.append(child)
+                    }
                 }
                 self.population = nextGeneration
-                if let bestRoute = self.population.sorted(by: sortByFitnessDESC).first {
+                if let bestRoute = self.population.bestIndividual {
                     self.onNewGeneration?(bestRoute, self.generationCounter)
                 }
                 self.generationCounter += 1
-                if self.benchTimer.elapsed > self.timeLimit {
+                if self.benchTimer.elapsed > self.timeLimit, self.generationCounter > 50 {
                     self.stopEvolution()
+                    if let bestRoute = self.population.bestIndividual {
+                        self.onNewGeneration?(bestRoute, Int(bestRoute.distance))
+                    }
                 }
             }
         }
@@ -68,44 +73,6 @@ class GeneticAlgorithm {
     
     public func stopEvolution() {
         evolving = false
-    }
-    
-    private func getParent(fromGeneration generation: Population, withTotalDistance totalDistance: CGFloat) -> Chromosome? {
-        let fitness = CGFloat(Double(arc4random()) / Double(UINT32_MAX))
-        var currentFitness: CGFloat = 0.0
-        var result: Chromosome?
-        generation.forEach { (route) in
-            if currentFitness <= fitness {
-                currentFitness += route.fitness(withTotalDistance: totalDistance) //TODO: This is using the 'elitist' method, convert it to a 'roulette'
-                result = route
-            }
-        }
-        return result
-    }
-    
-    private func produceOffspring(firstParent: Chromosome, secondParent: Chromosome) -> Chromosome {
-        let slice: Int = Int(arc4random_uniform(UInt32(firstParent.cities.count)))
-        var cities: [City] = Array(firstParent.cities[0..<slice])
-        var idx = slice
-        while cities.count < secondParent.cities.count {
-            let city = secondParent.cities[idx]
-            if cities.contains(city) == false {
-                cities.append(city)
-            }
-            idx = (idx + 1) % secondParent.cities.count
-        }
-        return Chromosome(cities: cities)
-    }
-    
-    private func mutate(child: Chromosome) -> Chromosome {
-        if self.mutationProbability >= Double(Double(arc4random()) / Double(UINT32_MAX)) {
-            let firstIdx = Int(arc4random_uniform(UInt32(child.cities.count)))
-            let secondIdx = Int(arc4random_uniform(UInt32(child.cities.count)))
-            var cities = child.cities
-            cities.swapAt(firstIdx, secondIdx)
-            return Chromosome(cities: cities)
-        }
-        return child
     }
 }
 
