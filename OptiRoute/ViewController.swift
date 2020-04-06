@@ -41,6 +41,7 @@ class ViewController: UIViewController {
         guard let touch = touches.first else { return }
         if mapView.point(inside: touch.location(in: mapView), with: event) {
             let location = touch.location(in: mapView)
+            guard locations.count < 18 else { return }
             locations.append(location)
         }
     }
@@ -93,11 +94,19 @@ class ViewController: UIViewController {
     }
     
     @IBAction func startTap() {
+        startBtn.isEnabled = false
+        clearBtn.isEnabled = false
+        undoBtn.isEnabled = false
+        sampleBtn.isEnabled = false
         geneticAlgorithm = GeneticAlgorithm(withCities: locations.map { City(location: $0) })
         geneticAlgorithm?.onNewGeneration = { (route, generation) in
             DispatchQueue.main.async {
                 self.generationLbl.text = "Generation: \(generation)"//", distance: \(Int(route.distance))"
                 self.drawRoute(route: route)
+                self.startBtn.isEnabled = generation > 250
+                self.clearBtn.isEnabled = generation > 250
+                self.undoBtn.isEnabled = generation > 250
+                self.sampleBtn.isEnabled = generation > 250
             }
         }
         geneticAlgorithm?.startEvolution()
