@@ -24,14 +24,13 @@ class GeneticAlgorithm {
     init(withCities: [City]) {
         cities = withCities
         let citiesCount = cities.count
-        timeLimit = Double(citiesCount)
-        //populationSize = Swift.min(900, 2 * citiesCount * Int(timeLimit * 2))
-        populationSize = Swift.min(citiesCount * 40, 2 * citiesCount * Int(timeLimit * 2))
+        timeLimit = Double(citiesCount) * 1.5
+        populationSize = Swift.min(512, citiesCount * 40, 2 * citiesCount * Int(timeLimit * 2))
         if let maxSize = citiesCount.factorial, maxSize < populationSize {
             populationSize = maxSize
         }
-        maxGenerations = 10 + citiesCount / 2
-        print("\ncountries \(populationSize) with \(citiesCount) cities, start generations: \(maxGenerations)")
+        maxGenerations = citiesCount / 2
+        print("\npop:\(populationSize) city:\(citiesCount) it:\(maxGenerations) time:\(timeLimit.str(1))")
         population = randomPopulation(fromCities: cities)
     }
     
@@ -47,57 +46,55 @@ class GeneticAlgorithm {
     public func startEvolution() {
         evolving = true
         benchTimer.restart()
-        for i in 1...(4 - Swift.max(1, (self.cities.count + 1) / 8)) {
+        let itrs = (4 - Swift.max(1, (self.cities.count + 1) / 8))
+        for i in 1...itrs {
             let tmp = randomPopulation(fromCities: cities)
-            let popTotalWeight = population.status.totalWeight
-            let tmpTotalWeight = tmp.status.totalWeight
+            let popTotalWeight = population.stats.weight
+            let tmpTotalWeight = tmp.stats.weight
             guard tmpTotalWeight < popTotalWeight else { continue }
-            print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
+            //print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
             population = tmp
         }
         DispatchQueue.global().async {
-            var deltas = [Double]()
-            var totalWeight: Double = 0
-            let stepper = Swift.max(1, (self.cities.count + 1) / 8)
+            var bestOne: Chromosome?
+            var counter = -1
             while self.evolving {
-                let actual = self.population.status
-                let actualTotalWeight = Double(actual.totalWeight)
-                if totalWeight > 0 {
-                    let averageWeight = totalWeight / Double(self.generationCounter - 1)
-                    let minimum = Swift.min(averageWeight, actualTotalWeight)
-                    let maximum = Swift.max(averageWeight, actualTotalWeight)
-                    let diff = maximum / minimum - 1
-                    let delta = diff * diff * 1024
-                    //print("#\(String(format: "%02d", self.generationCounter)) delta: \(String(format: "%.1f", delta))")
-                    if delta < deltas.min() ?? 0 {
-                        deltas.append(delta)
-                        self.maxGenerations += stepper
+                let stats = self.population.stats
+                if let newBest = stats.vip {
+                    if bestOne == nil {
+                        bestOne = newBest
                     }
-                    if deltas.isEmpty {
-                        deltas.append(delta)
+                    if let best = bestOne, newBest.distance < best.distance {
+                        bestOne = newBest
+                        self.maxGenerations += 2
+                    } else {
+                        counter += 1
+                    }
+                    self.onNewGeneration?(bestOne ?? newBest, self.generationCounter)
+                }
+                if counter > 2 {
+                    counter = 0
+                    self.populationSize = Int.random(in: (2 * self.cities.count)...512) * 2
+                    //print("#\(self.generationCounter)\tpop:\(self.populationSize)")
+                    self.population = self.randomPopulation(fromCities: self.cities)
+                    if let best = bestOne {
+                        self.population[0] = best
                     }
                 }
-                totalWeight += actualTotalWeight
-                var nextGeneration = Population()
                 self.mutationProb = Swift.max(pow(1.1, -0.44 * Double(self.generationCounter)), 0.015)
-                //print("mutationProb: \(self.mutationProb) at: \(self.generationCounter)")
+                var nextGeneration = Population()
                 for _ in 0 ..< self.populationSize {
-                    if let child = actual.population.child(mutation: self.mutationProb, weight: actual.totalWeight) {
+                    if let child = stats.pop.child(mutation: self.mutationProb, weight: stats.weight) {
                         nextGeneration.append(child)
                     }
                 }
                 self.population = nextGeneration
-                if let bestRoute = self.population.bestIndividual {
-                    self.onNewGeneration?(bestRoute, self.generationCounter)
-                }
                 self.generationCounter += 1
-                guard self.benchTimer.elapsed > self.timeLimit ||
-                    self.generationCounter > self.maxGenerations else { continue }
-                print("\(String(format: "%.1f", self.benchTimer.elapsed)) > \(self.timeLimit) || \(self.generationCounter) > \(self.maxGenerations)")
+                guard self.benchTimer.elapsed > self.timeLimit || self.generationCounter > self.maxGenerations else { continue }
                 self.stopEvolution()
-                guard let bestRoute = self.population.bestIndividual else { return }
+                guard let bestRoute = bestOne else { return }
                 self.onNewGeneration?(bestRoute, Int(bestRoute.distance))
-                print("Generation weight: \(String(format: "%.0f", bestRoute.distance))")
+                print("pop:\(self.populationSize), \(self.benchTimer.elapsed.str(1)) > \(self.timeLimit.str(1)) || \(self.generationCounter) > \(self.maxGenerations), bestRoute \(bestRoute.distance.str(0))")
             }
         }
     }
@@ -122,6 +119,18 @@ public extension Int {
     var factorial: Int? {
         guard factDouble < Double(Int.max) else { return nil }
         return Int(factDouble)
+    }
+}
+
+extension Double {
+    func str(_ decimals: Int) -> String {
+        return String(format: "%.\(decimals)f", self)
+    }
+}
+
+extension CGFloat {
+    func str(_ decimals: Int) -> String {
+        return String(format: "%.\(decimals)f", self)
     }
 }
 

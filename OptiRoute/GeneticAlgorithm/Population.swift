@@ -19,9 +19,11 @@ extension Population {
         return currentGeneration(totalWeight: totalWeight).first
     }
     
-    var status: (population: Population, totalWeight: CGFloat) {
+    var stats: (pop: Population, weight: CGFloat, vip: Chromosome?) {
         let weight = totalWeight
-        return (currentGeneration(totalWeight: weight), weight)
+        let actual = currentGeneration(totalWeight: weight)
+        let first = actual.first
+        return (actual, weight, first)
     }
     
     private func currentGeneration(totalWeight weight: CGFloat) -> Population {

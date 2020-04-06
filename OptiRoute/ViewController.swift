@@ -31,9 +31,6 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-//        if #available(iOS 13.0, *) {
-//            overrideUserInterfaceStyle = .light // Always adopt a light interface style.
-//        }
         resetLocations(arr: "locations".keyForRead())
     }
     
@@ -41,7 +38,7 @@ class ViewController: UIViewController {
         guard let touch = touches.first else { return }
         if mapView.point(inside: touch.location(in: mapView), with: event) {
             let location = touch.location(in: mapView)
-            guard locations.count < 18 else { return }
+            guard startBtn.isEnabled else { return }
             locations.append(location)
         }
     }
@@ -94,6 +91,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func startTap() {
+        guard locations.count > 1 else { return }
         startBtn.isEnabled = false
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
@@ -114,6 +112,10 @@ class ViewController: UIViewController {
 
     @IBAction func stopTap() {
         geneticAlgorithm?.stopEvolution()
+        startBtn.isEnabled = true
+        clearBtn.isEnabled = true
+        undoBtn.isEnabled = true
+        sampleBtn.isEnabled = true
     }
 
     @IBAction func undoTap() {
@@ -127,9 +129,13 @@ class ViewController: UIViewController {
     }
 
     @IBAction func sampleTap() {
-        var locs: [CGPoint] = []
-        Node.nodes.forEach { locs.append(CGPoint(x: $0.location.x, y: $0.location.y))}
-        locations = locs
+//        var locs: [CGPoint] = []
+//        Node.nodes.forEach { locs.append(CGPoint(x: $0.location.x, y: $0.location.y))}
+//        locations = locs
+        let wFactor = Double(mapView.bounds.width - 10)
+        let hFactor = Double(mapView.bounds.height - 10)
+        let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+        locations.append(p)
     }
 }
 
