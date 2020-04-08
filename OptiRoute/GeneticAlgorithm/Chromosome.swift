@@ -11,42 +11,42 @@ class Chromosome {
     
     let cities: [City]
     
-    private var _distance: CGFloat?
-    var distance: CGFloat {
-        if _distance == nil {
-            _distance = calculateDistance()
+    private var _weight: Double?
+    var weight: Double {
+        if _weight == nil {
+            _weight = calculateWeight()
         }
-        return _distance ?? 0.0
+        return _weight ?? 0.0
     }
     
     init(cities: [City]) {
         self.cities = cities
     }
     
-    private func calculateDistance() -> CGFloat {
-        var result: CGFloat = 0.0
+    private func calculateWeight() -> Double {
+        var result: Double = 0.0
         var previousCity: City?
         cities.forEach { city in
             if let previous = previousCity {
-                result += previous.distance(to: city)
+                result += previous.weightTo(other: city)
             }
             previousCity = city
         }
         guard let first = cities.first, let last = cities.last else { return result }
-        return result + first.distance(to: last)
+        return result + first.weightTo(other: last)
     }
     
     var description: String {
         var ret = "["
         for city in cities {
-            ret += city.description
+            ret += city.name + ", "
         }
         return ret + "]"
     }
     
     // Probability of being selected from 0 to 1
-    func fitness(withTotalDistance totalDistance: CGFloat) -> CGFloat {
-        return 1 - (distance / totalDistance)
+    func fitness(withTotalWeight totalWeigh: Double) -> Double {
+        return 1 - (weight / totalWeigh)
     }
 }
 /// Chromosome operators
@@ -54,7 +54,7 @@ extension Chromosome {
     
     func produceOffspring(secondParent: Chromosome) -> Chromosome {
         let firstParent = self
-        let slice: Int = Int(arc4random_uniform(UInt32(firstParent.cities.count)))
+        let slice = Int(arc4random_uniform(UInt32(firstParent.cities.count)))
         var cities: [City] = Array<City>(firstParent.cities[0..<slice])
         var idx = slice
         while cities.count < secondParent.cities.count {

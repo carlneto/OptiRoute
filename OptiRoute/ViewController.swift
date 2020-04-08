@@ -8,7 +8,7 @@
 import UIKit
 
 class ViewController: UIViewController {
-
+    
     @IBOutlet weak var mapView: UIView!
     @IBOutlet weak var generationLbl: UILabel!
     @IBOutlet weak var startBtn: UIButton!
@@ -16,7 +16,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var undoBtn: UIButton!
     @IBOutlet weak var clearBtn: UIButton!
     @IBOutlet weak var sampleBtn: UIButton!
-
+    
     var geneticAlgorithm: GeneticAlgorithm?
     var locations: [CGPoint] = [] {
         didSet {
@@ -28,7 +28,7 @@ class ViewController: UIViewController {
             drawCities()
         }
     }
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         resetLocations(arr: "locations".keyForRead())
@@ -45,19 +45,39 @@ class ViewController: UIViewController {
     
     private func drawCities() {
         self.mapView.layer.sublayers?.removeAll()
-        self.locations.forEach { location in
+        self.locations.enumerated().forEach { idx, location in
             let circle = UIBezierPath.init(arcCenter: location, radius: 5, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
             let circleLayer = CAShapeLayer()
             circleLayer.path = circle.cgPath
             circleLayer.fillColor = UIColor.red.cgColor
             circleLayer.strokeColor = UIColor.red.cgColor
+            let lbl = CATextLayer()
+            let txt = "\(idx)"
+            lbl.string = txt
+            lbl.fontSize = 11
+            lbl.alignmentMode = .center
+            let h = lbl.fontSize * 2
+            let w = txt.widthFrom(height: h, usingFont: lbl.font as? UIFont ?? UIFont.systemFont(ofSize: lbl.fontSize))
+            lbl.frame = CGRect(origin: location, size: CGSize(width: w, height: h)).offsetBy(dx: -w / 2, dy: 6)
+            lbl.foregroundColor = UIColor.systemBlue.cgColor
+            self.mapView.layer.addSublayer(lbl)
             self.mapView.layer.addSublayer(circleLayer)
         }
     }
     
     private func drawRoute(route: Chromosome) {
-        guard let firstCity = route.cities.first else { return }
+        guard !route.cities.isEmpty else { return }
         var otherCities = route.cities
+        var pos: Int?
+        for (idx, city) in otherCities.enumerated() {
+            if !city.movable {
+                pos = idx
+            }
+        }
+        if let pos = pos {
+            otherCities.rotate(positions: pos)
+        }
+        guard let firstCity = otherCities.first else { return }
         otherCities.remove(at: 0)
         drawCities()
         DispatchQueue.main.async {
@@ -67,11 +87,13 @@ class ViewController: UIViewController {
             otherCities.forEach { city in
                 path.addLine(to: city.location)
             }
-            path.addLine(to: firstCity.location)
+            if firstCity.movable {
+                path.addLine(to: firstCity.location)
+            }
             let pathLayer = CAShapeLayer()
             pathLayer.path = path.cgPath
             pathLayer.fillColor = UIColor.clear.cgColor
-            pathLayer.strokeColor = UIColor.black.cgColor
+            pathLayer.strokeColor = UIColor.brown.cgColor
             self.mapView.layer.addSublayer(pathLayer)
         }
     }
@@ -86,7 +108,9 @@ class ViewController: UIViewController {
         }
         locations = locs
         if locations.count > 0 {
-            startTap()
+            DispatchQueue.main.async {
+                self.startTap()
+            }
         }
     }
     
@@ -96,10 +120,12 @@ class ViewController: UIViewController {
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
         sampleBtn.isEnabled = false
-        geneticAlgorithm = GeneticAlgorithm(withCities: locations.map { City(location: $0) })
+        geneticAlgorithm = GeneticAlgorithm(withCities: locations.enumerated().map { (idx, loc) in
+            City(location: loc, name: "\(idx)", movable: idx > -1)
+        })
         geneticAlgorithm?.onNewGeneration = { (route, generation) in
             DispatchQueue.main.async {
-                self.generationLbl.text = "Generation: \(generation)"//", distance: \(Int(route.distance))"
+                self.generationLbl.text = "Generation: \(generation)"
                 self.drawRoute(route: route)
                 self.startBtn.isEnabled = generation > 250
                 self.clearBtn.isEnabled = generation > 250
@@ -109,7 +135,7 @@ class ViewController: UIViewController {
         }
         geneticAlgorithm?.startEvolution()
     }
-
+    
     @IBAction func stopTap() {
         geneticAlgorithm?.stopEvolution()
         startBtn.isEnabled = true
@@ -117,25 +143,37 @@ class ViewController: UIViewController {
         undoBtn.isEnabled = true
         sampleBtn.isEnabled = true
     }
-
+    
     @IBAction func undoTap() {
         locations.removeLast()
     }
-
+    
     @IBAction func clearTap() {
         locations.removeAll()
         mapView.layer.sublayers?.removeAll()
         generationLbl.text = "Generation: 0"
     }
-
+    
     @IBAction func sampleTap() {
-//        var locs: [CGPoint] = []
-//        Node.nodes.forEach { locs.append(CGPoint(x: $0.location.x, y: $0.location.y))}
-//        locations = locs
-        let wFactor = Double(mapView.bounds.width - 10)
-        let hFactor = Double(mapView.bounds.height - 10)
-        let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
-        locations.append(p)
+        var locs: [CGPoint] = []
+        let cities = City.nodes
+        for city in cities where !city.movable {
+            locs.append(CGPoint(x: city.location.x, y: city.location.y))
+        }
+        for city in cities where city.movable {
+            locs.append(CGPoint(x: city.location.x, y: city.location.y))
+        }
+        locations = locs
+        /*
+         let wFactor = Double(mapView.bounds.width - 10)
+         let hFactor = Double(mapView.bounds.height - 10)
+         //        while locations.count < 9 {
+         //            let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+         //            locations.append(p)
+         //        }
+         let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+         locations.append(p)
+         */
     }
 }
 
@@ -153,5 +191,24 @@ extension String {
     func keyForRead() -> [String] {
         guard !isEmpty else { return [String]() }
         return UserDefaults.standard.stringArray(forKey: self) ?? [String]()
+    }
+    
+    func widthFrom(height: CGFloat, usingFont: UIFont) -> CGFloat {
+        let label =  UILabel(frame: CGRect(x: 0, y: 0, width: .greatestFiniteMagnitude, height: height))
+        label.numberOfLines = 0
+        label.text = self
+        label.font = usingFont
+        label.sizeToFit()
+        return label.frame.width
+    }
+}
+
+
+extension RangeReplaceableCollection {
+    mutating func rotate(positions: Int) {
+        let index = self.index(startIndex, offsetBy: positions, limitedBy: endIndex) ?? endIndex
+        let slice = self[..<index]
+        removeSubrange(..<index)
+        insert(contentsOf: slice, at: endIndex)
     }
 }

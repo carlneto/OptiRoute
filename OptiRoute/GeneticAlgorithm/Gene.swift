@@ -9,7 +9,7 @@ import Foundation
 
 protocol Fitness: Comparable {
     associatedtype T
-    func weight(other: T) -> Double
+    func weightTo(other: T) -> Double
 }
 
 protocol Movable: Hashable {
