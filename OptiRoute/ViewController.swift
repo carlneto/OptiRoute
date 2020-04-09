@@ -17,21 +17,24 @@ class ViewController: UIViewController {
     @IBOutlet weak var clearBtn: UIButton!
     @IBOutlet weak var sampleBtn: UIButton!
     
-    var geneticAlgorithm: GeneticAlgorithm?
-    var locations: [CGPoint] = [] {
+    let userLocations = "locations1"
+    var generator: Generator?
+    
+    var locations = [String : CGPoint]() {
         didSet {
             var strs = [String]()
-            for p in locations {
-                strs.append("\(p.x),\(p.y)")
+            for loc in locations {
+                strs.append("\(loc.key),\(loc.value.x),\(loc.value.y)")
             }
-            "locations".keyForSaving(strs)
-            drawCities()
+            userLocations.keyForSaving(strs)
+            drawPoints()
         }
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        resetLocations(arr: "locations".keyForRead())
+        resetLocations(arr: userLocations.keyForRead())
+        "locations".keyToRemoveObject(sync: false)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -39,14 +42,16 @@ class ViewController: UIViewController {
         if mapView.point(inside: touch.location(in: mapView), with: event) {
             let location = touch.location(in: mapView)
             guard startBtn.isEnabled else { return }
-            locations.append(location)
+            locations["\(locations.count)"] = location
         }
     }
     
-    private func drawCities() {
+    private func drawPoints() {
         self.mapView.layer.sublayers?.removeAll()
-        self.locations.enumerated().forEach { idx, location in
-            let circle = UIBezierPath.init(arcCenter: location, radius: 5, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
+        self.locations.forEach { location in
+            let p = location.value
+            let idx = location.key
+            let circle = UIBezierPath.init(arcCenter: p, radius: 5, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
             let circleLayer = CAShapeLayer()
             circleLayer.path = circle.cgPath
             circleLayer.fillColor = UIColor.red.cgColor
@@ -56,40 +61,32 @@ class ViewController: UIViewController {
             lbl.string = txt
             lbl.fontSize = 11
             lbl.alignmentMode = .center
+            let aFont = lbl.font as? UIFont ?? UIFont.systemFont(ofSize: lbl.fontSize)
             let h = lbl.fontSize * 2
-            let w = txt.widthFrom(height: h, usingFont: lbl.font as? UIFont ?? UIFont.systemFont(ofSize: lbl.fontSize))
-            lbl.frame = CGRect(origin: location, size: CGSize(width: w, height: h)).offsetBy(dx: -w / 2, dy: 6)
+            let w = txt.widthFrom(height: h, usingFont: aFont)
+            lbl.frame = CGRect(origin: p, size: CGSize(width: w, height: h)).offsetBy(dx: -w / 2, dy: 6)
             lbl.foregroundColor = UIColor.systemBlue.cgColor
             self.mapView.layer.addSublayer(lbl)
             self.mapView.layer.addSublayer(circleLayer)
         }
     }
     
-    private func drawRoute(route: Chromosome) {
-        guard !route.cities.isEmpty else { return }
-        var otherCities = route.cities
-        var pos: Int?
-        for (idx, city) in otherCities.enumerated() {
-            if !city.movable {
-                pos = idx
-            }
-        }
-        if let pos = pos {
-            otherCities.rotate(positions: pos)
-        }
-        guard let firstCity = otherCities.first else { return }
-        otherCities.remove(at: 0)
-        drawCities()
+    private func drawRoute(_ person: Person) {
+        guard !person.body.isEmpty else { return }
+        var organs = person.body
+        guard let firstOrgan = organs.first, let firstLoc = firstOrgan.content as? CGPoint else { return }
+        organs.remove(at: 0)
+        drawPoints()
         DispatchQueue.main.async {
             let path = UIBezierPath()
             path.lineWidth = 1
-            path.move(to: firstCity.location)
-            otherCities.forEach { city in
-                path.addLine(to: city.location)
+            path.move(to: firstLoc)
+            organs.forEach { organ in
+                if let loc = organ.content as? CGPoint {
+                    path.addLine(to: loc)
+                }
             }
-            if firstCity.movable {
-                path.addLine(to: firstCity.location)
-            }
+            path.addLine(to: firstLoc)
             let pathLayer = CAShapeLayer()
             pathLayer.path = path.cgPath
             pathLayer.fillColor = UIColor.clear.cgColor
@@ -99,19 +96,16 @@ class ViewController: UIViewController {
     }
     
     private func resetLocations(arr: [String]) {
-        var locs: [CGPoint] = []
+        var locs = [String : CGPoint]()
         arr.forEach {
             let pp = $0.split(separator: ",")
-            guard let a = pp.first, let b = pp.last,
-                let x = Double(a), let y = Double(b) else { return }
-            locs.append(CGPoint(x: x, y: y))
+            let n = pp[0]
+            let a = pp[1]
+            let b = pp[2]
+            guard !n.isEmpty, let x = Double(a), let y = Double(b) else { return }
+            locs["\(n)"] = CGPoint(x: x, y: y)
         }
         locations = locs
-        if locations.count > 0 {
-            DispatchQueue.main.async {
-                self.startTap()
-            }
-        }
     }
     
     @IBAction func startTap() {
@@ -120,24 +114,23 @@ class ViewController: UIViewController {
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
         sampleBtn.isEnabled = false
-        geneticAlgorithm = GeneticAlgorithm(withCities: locations.enumerated().map { (idx, loc) in
-            City(location: loc, name: "\(idx)", movable: idx > -1)
-        })
-        geneticAlgorithm?.onNewGeneration = { (route, generation) in
+        let body = Body.create(dict: locations)
+        generator = Generator(subject: body)
+        generator?.onNewGeneration = { (person, generation) in
             DispatchQueue.main.async {
                 self.generationLbl.text = "Generation: \(generation)"
-                self.drawRoute(route: route)
+                self.drawRoute(person)
                 self.startBtn.isEnabled = generation > 250
                 self.clearBtn.isEnabled = generation > 250
                 self.undoBtn.isEnabled = generation > 250
                 self.sampleBtn.isEnabled = generation > 250
             }
         }
-        geneticAlgorithm?.startEvolution()
+        generator?.startEvolution()
     }
     
     @IBAction func stopTap() {
-        geneticAlgorithm?.stopEvolution()
+        generator?.stopEvolution()
         startBtn.isEnabled = true
         clearBtn.isEnabled = true
         undoBtn.isEnabled = true
@@ -145,7 +138,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func undoTap() {
-        locations.removeLast()
+        locations.removeValue(forKey: "\(locations.count - 1)")
     }
     
     @IBAction func clearTap() {
@@ -155,13 +148,9 @@ class ViewController: UIViewController {
     }
     
     @IBAction func sampleTap() {
-        var locs: [CGPoint] = []
-        let cities = City.nodes
-        for city in cities where !city.movable {
-            locs.append(CGPoint(x: city.location.x, y: city.location.y))
-        }
-        for city in cities where city.movable {
-            locs.append(CGPoint(x: city.location.x, y: city.location.y))
+        var locs = [String : CGPoint]()
+        for node in nodes {
+            locs[node.name] = CGPoint(x: node.x * Body.wFactor, y: node.y * Body.hFactor - 30)
         }
         locations = locs
         /*
@@ -175,40 +164,60 @@ class ViewController: UIViewController {
          locations.append(p)
          */
     }
+    
+    let nodes = [
+        (x:  40.0, y:  70.0, name: "A"),
+        (x: 240.0, y: 630.0, name: "N"),
+        (x: 200.0, y: 140.0, name: "D"),
+        (x: 330.0, y:  80.0, name: "F"),
+        (x: 320.0, y: 700.0, name: "O"),
+        (x: 380.0, y: 140.0, name: "G"),
+        (x: 130.0, y: 180.0, name: "C"),
+        (x:  70.0, y: 130.0, name: "B"),
+        (x: 400.0, y: 210.0, name: "H"),
+        (x: 200.0, y: 490.0, name: "L"),
+        (x: 240.0, y: 420.0, name: "K"),
+        (x: 360.0, y: 280.0, name: "I"),
+        (x: 300.0, y: 350.0, name: "J"),
+        (x: 180.0, y: 570.0, name: "M"),
+        (x: 240.0, y:  80.0, name: "E"),
+        (x: 400.0, y: 750.0, name: "P")
+    ]
 }
 
-extension String {
-    func keyForSaving(_ val: Any, sync: Bool = true) {
-        func perform(_ key: String) {
-            guard !key.isEmpty else { return }
-            let userDefaults = UserDefaults.standard
-            userDefaults.set(val, forKey: key)
-            userDefaults.synchronize()
+
+extension Body {
+    
+    static let wFactor = Double(UIScreen.main.bounds.width / 450)
+    static let hFactor = Double(UIScreen.main.bounds.height / 900)
+
+    static func create(dict: [String : CGPoint]) -> Body {
+        var body = Body()
+        for point in dict {
+            _ = body.inserted(name: "\(point.key)", content: point.value)
         }
-        let key = self
-        sync ? perform(key) : DispatchQueue.global(qos: .background).async { perform(key) }
-    }
-    func keyForRead() -> [String] {
-        guard !isEmpty else { return [String]() }
-        return UserDefaults.standard.stringArray(forKey: self) ?? [String]()
+        body.setWeights()
+        return body
     }
     
-    func widthFrom(height: CGFloat, usingFont: UIFont) -> CGFloat {
-        let label =  UILabel(frame: CGRect(x: 0, y: 0, width: .greatestFiniteMagnitude, height: height))
-        label.numberOfLines = 0
-        label.text = self
-        label.font = usingFont
-        label.sizeToFit()
-        return label.frame.width
+    static func create(points: [CGPoint]) -> Body {
+        var body = Body()
+        for (idx, point) in points.enumerated() {
+            _ = body.inserted(name: "\(idx)", content: point)
+        }
+        body.setWeights()
+        return body
     }
-}
-
-
-extension RangeReplaceableCollection {
-    mutating func rotate(positions: Int) {
-        let index = self.index(startIndex, offsetBy: positions, limitedBy: endIndex) ?? endIndex
-        let slice = self[..<index]
-        removeSubrange(..<index)
-        insert(contentsOf: slice, at: endIndex)
+    
+    func setWeights() {
+        for o1 in self {
+            for o2 in self {
+                guard o1 != o2 else { continue }
+                let p1 = o1.content as! CGPoint
+                let p2 = o2.content as! CGPoint
+                let aWeight = hypot(Double(p1.x - p2.x), Double(p1.y - p2.y))
+                o1.set(weight: aWeight, to: o2)
+            }
+        }
     }
 }
