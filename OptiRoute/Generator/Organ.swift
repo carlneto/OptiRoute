@@ -25,7 +25,8 @@ class Organ: Equatable {
     }
     
     func set(weight: Double, to other: Organ) {
-        Organ.weights[[self.name, other.name]] = weight //Organ.weights[[other.name, self.name]] = weight
+        Organ.weights[[self.name, other.name]] = weight
+        Organ.weights[[other.name, self.name]] = weight
     }
     
     static func == (lhs: Organ, rhs: Organ) -> Bool {

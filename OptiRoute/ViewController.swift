@@ -148,21 +148,19 @@ class ViewController: UIViewController {
     }
     
     @IBAction func sampleTap() {
-        var locs = [String : CGPoint]()
-        for node in nodes {
-            locs[node.name] = CGPoint(x: node.x * Body.wFactor, y: node.y * Body.hFactor - 30)
+        //var locs = [String : CGPoint]()
+        //for node in nodes {
+        //    locs[node.name] = CGPoint(x: node.x * Body.wFactor, y: node.y * Body.hFactor - 30)
+        //}
+        //locations = locs
+        let wFactor = Double(mapView.bounds.width - 10)
+        let hFactor = Double(mapView.bounds.height - 10)
+        while locations.count > 1, locations.count < 9 {
+            let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+            locations["\(locations.count)"] = p
         }
-        locations = locs
-        /*
-         let wFactor = Double(mapView.bounds.width - 10)
-         let hFactor = Double(mapView.bounds.height - 10)
-         //        while locations.count < 9 {
-         //            let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
-         //            locations.append(p)
-         //        }
-         let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
-         locations.append(p)
-         */
+        let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+        locations["\(locations.count)"] = p
     }
     
     let nodes = [
@@ -190,6 +188,9 @@ extension Body {
     
     static let wFactor = Double(UIScreen.main.bounds.width / 450)
     static let hFactor = Double(UIScreen.main.bounds.height / 900)
+    static let a = "0"
+    static let b = "1"
+    static let c = 0.0
 
     static func create(dict: [String : CGPoint]) -> Body {
         var body = Body()
@@ -213,6 +214,14 @@ extension Body {
         for o1 in self {
             for o2 in self {
                 guard o1 != o2 else { continue }
+                if o1.name == Body.a, o2.name == Body.b {
+                    o1.set(weight: Body.c, to: o2)
+                    continue
+                }
+                if o1.name == Body.b, o2.name == Body.a {
+                    o1.set(weight: Body.c, to: o2)
+                    continue
+                }
                 let p1 = o1.content as! CGPoint
                 let p2 = o2.content as! CGPoint
                 let aWeight = hypot(Double(p1.x - p2.x), Double(p1.y - p2.y))
