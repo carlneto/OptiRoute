@@ -6,10 +6,11 @@ class Generator {
     let body: Body
     let benchTimer = BenchTimer()
     var onNewGeneration: ( (Person, Int) -> () )?
-    var evolving = false
+    var onEndGeneration: ( (Person, Int) -> () )?
     
     private(set) var bestOne: Person?
     private var people = People()
+    private var evolving = false
     private var peopleSize = 0
     private var generationCounter = 1
     private var maxGenerations = 0
@@ -59,19 +60,14 @@ class Generator {
                     }
                     self.onNewGeneration?(self.bestOne ?? newBest, self.generationCounter)
                 }
-                if counter > 2 {
-                    counter = 0
+                if counter % 4 == 3 {
                     self.incrementProb = self.generationCounter - 1
-                    if let best = self.bestOne {
-                        if self.generationCounter - self.bestGeneration > 9 {
-                            self.bestGeneration = self.generationCounter
-                        } else {
-                            let halfMin = 2 * self.body.count
-                            self.peopleSize = (halfMin + Int(arc4random_uniform(UInt32(512 - halfMin)))) * 2
-                            //print("#\(self.generationCounter)\tpop:\(self.peopleSize)")
-                            self.people = self.randomPeople(fromOrgans: self.body)
-                            self.people[0] = best
-                        }
+                    if self.generationCounter - self.bestGeneration > 9 {
+                        self.bestGeneration = self.generationCounter
+                    } else {
+                        let halfMin = 2 * self.body.count
+                        self.peopleSize = (halfMin + Int(arc4random_uniform(UInt32(512 - halfMin)))) * 2
+                        self.people = self.randomPeople(fromOrgans: self.body)
                     }
                 }
                 var nextGeneration = People()
@@ -83,17 +79,19 @@ class Generator {
                 }
                 self.people = nextGeneration
                 self.generationCounter += 1
-                guard self.benchTimer.elapsed > self.timeLimit || self.generationCounter > self.maxGenerations else { continue }
+                guard counter > 16 || self.generationCounter > self.maxGenerations || self.benchTimer.elapsed > self.timeLimit else { continue }
                 self.stopEvolution()
                 guard let bestRoute = self.bestOne else { return }
                 self.onNewGeneration?(bestRoute, Int(bestRoute.weight))
-                print("pop:\(self.peopleSize), \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)) || \(self.generationCounter) > \(self.maxGenerations), bestRoute \(bestRoute.weight.zeros(0))")
+                print("pop:\(self.peopleSize), counter: \(counter) > 16 || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)) || \(self.generationCounter) > \(self.maxGenerations), bestRoute \(bestRoute.weight.zeros(0))")
             }
         }
     }
     
     public func stopEvolution() {
         evolving = false
+        guard let bestRoute = self.bestOne else { return }
+        self.onEndGeneration?(bestRoute, Int(bestRoute.weight))
     }
     
     private func randomPeople(fromOrgans: Body) -> People {

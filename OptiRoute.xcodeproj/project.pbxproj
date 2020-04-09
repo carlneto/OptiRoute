@@ -66,6 +66,7 @@
 			children = (
 				AFA590502438A33200FF4BDC /* AppDelegate.swift */,
 				AFA590522438A33200FF4BDC /* SceneDelegate.swift */,
+				AF26D98B243DD62700393514 /* Extensions.swift */,
 				AFA5905E2438A33600FF4BDC /* Info.plist */,
 				AFA590642438A40100FF4BDC /* OptiRoute.entitlements */,
 				AFA590592438A33600FF4BDC /* Assets.xcassets */,
@@ -96,7 +97,6 @@
 			children = (
 				AF26D991243DE45900393514 /* Generator */,
 				AF39265A2438AC0C0017E6E6 /* Resources */,
-				AF26D98B243DD62700393514 /* Extensions.swift */,
 				AFA590542438A33200FF4BDC /* ViewController.swift */,
 				AFA590562438A33200FF4BDC /* Main.storyboard */,
 			);
