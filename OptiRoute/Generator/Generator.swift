@@ -3,49 +3,49 @@ import UIKit
 class Generator {
     
     var timeLimit = 0.0
-    let body: Body
     let benchTimer = BenchTimer()
     var onNewGeneration: ( (Person, Int) -> () )?
-    var onEndGeneration: ( (Person, Int) -> () )?
+    var onEvolutionEnd: ( (Person, Int) -> () )?
     
     private(set) var bestOne: Person?
+    private var body: Body
     private var people = People()
     private var evolving = false
     private var peopleSize = 0
     private var generationCounter = 1
-    private var maxGenerations = 0
-    private var incrementProb = 0
-    private var bestGeneration = 0
     
     init(subject: Body) {
         body = subject
         let bodyCount = body.count
-        timeLimit = Double(bodyCount) * 1.5
-        peopleSize = Swift.min(512, bodyCount * 40, 2 * bodyCount * Int(timeLimit * 2))
+        timeLimit = Double(bodyCount)
+        peopleSize = Swift.min(512, 40 * bodyCount)
         if let maxSize = bodyCount.factorial, maxSize < peopleSize {
             peopleSize = maxSize
         }
-        maxGenerations = bodyCount / 2
-        people = randomPeople(fromOrgans: body)
     }
     
-    public func startEvolution() {
-        print("\npop:\(peopleSize) bodyCount:\(body.count) it:\(maxGenerations) time:\(timeLimit.zeros(1))")
-        bestOne = nil
+    func startEvolution() {
+        print("\npop:\(peopleSize) bodyCount:\(body.count) time:\(timeLimit.zeros(1))")
         evolving = true
         benchTimer.restart()
-        let itrs = Swift.max(1, 4 - Swift.max(1, (self.body.count + 1) / 8))
-        for _ in 1...itrs {
-            let tmp = randomPeople(fromOrgans: body)
-            let popTotalWeight = people.stats.weight
-            let tmpTotalWeight = tmp.stats.weight
-            guard tmpTotalWeight < popTotalWeight else { continue }
-            //print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
-            people = tmp
+        let lim = self.body.count / 2
+        let itrs = Swift.max(1, 4 - Swift.max(1, (body.count + 1) / 8))
+        func setPeople() {
+            people = randomPeople(fromOrgans: body)
+            for i in 1...itrs {
+                let tmp = randomPeople(fromOrgans: body)
+                let popTotalWeight = people.stats.weight
+                let tmpTotalWeight = tmp.stats.weight
+                guard tmpTotalWeight < popTotalWeight else { continue }
+                print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
+                people = tmp
+            }
         }
+        setPeople()
         DispatchQueue.global().async {
-            var counter = -1
+            var counter = 0
             while self.evolving {
+                var nextGeneration = People()
                 let stats = self.people.stats
                 if let newBest = stats.vip {
                     if self.bestOne == nil {
@@ -53,45 +53,42 @@ class Generator {
                     }
                     if let best = self.bestOne, newBest.weight < best.weight {
                         self.bestOne = newBest
-                        self.maxGenerations += 2
-                        self.bestGeneration = self.generationCounter
+                        counter = 0
                     } else {
+                        if counter > 3 {
+                            let randomSize = Swift.min(self.peopleSize / 2, (counter - 3) * self.peopleSize / 8)
+                            nextGeneration += self.body.generatePeople(size: randomSize)
+                        }
                         counter += 1
                     }
                     self.onNewGeneration?(self.bestOne ?? newBest, self.generationCounter)
                 }
-                if counter % 4 == 3 {
-                    self.incrementProb = self.generationCounter - 1
-                    if self.generationCounter - self.bestGeneration > 9 {
-                        self.bestGeneration = self.generationCounter
-                    } else {
-                        let halfMin = 2 * self.body.count
-                        self.peopleSize = (halfMin + Int(arc4random_uniform(UInt32(512 - halfMin)))) * 2
-                        self.people = self.randomPeople(fromOrgans: self.body)
+                for _ in 0 ..< self.peopleSize / 4 {
+                    if let roulette = stats.pop.roulette {
+                        nextGeneration.append(roulette.person)
                     }
                 }
-                var nextGeneration = People()
-                let mutationProb = Swift.max(pow(1.1, -0.44 * Double(self.generationCounter - self.incrementProb)), 0.015)
-                for _ in 0 ..< self.peopleSize {
+                nextGeneration = Array(Set(nextGeneration))
+                let mutationProb = Swift.max(pow(1.1, -0.44 * Double(self.generationCounter)), 0.015)
+                while nextGeneration.count < self.peopleSize {
                     if let child = stats.pop.child(mutation: mutationProb, weight: stats.weight) {
                         nextGeneration.append(child)
                     }
                 }
                 self.people = nextGeneration
                 self.generationCounter += 1
-                guard counter > 16 || self.generationCounter > self.maxGenerations || self.benchTimer.elapsed > self.timeLimit else { continue }
+                guard counter > lim || self.benchTimer.elapsed > self.timeLimit else { continue }
                 self.stopEvolution()
                 guard let bestRoute = self.bestOne else { return }
                 self.onNewGeneration?(bestRoute, Int(bestRoute.weight))
-                print("pop:\(self.peopleSize), counter: \(counter) > 16 || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)) || \(self.generationCounter) > \(self.maxGenerations), bestRoute \(bestRoute.weight.zeros(0))")
+                print("\npop:\(self.peopleSize), counter: \(counter) > \(lim) || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }
         }
     }
     
     public func stopEvolution() {
         evolving = false
-        guard let bestRoute = self.bestOne else { return }
-        self.onEndGeneration?(bestRoute, Int(bestRoute.weight))
     }
     
     private func randomPeople(fromOrgans: Body) -> People {

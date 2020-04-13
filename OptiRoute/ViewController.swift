@@ -71,9 +71,9 @@ class ViewController: UIViewController {
         }
     }
     
-    private func drawRoute(_ person: Person) {
-        guard !person.body.isEmpty else { return }
-        var organs = person.body
+    private func drawRoute(_ body: Body, isRound: Bool = true) {
+        var organs = body
+        guard !organs.isEmpty else { return }
         guard let firstOrgan = organs.first, let firstLoc = firstOrgan.content as? CGPoint else { return }
         organs.remove(at: 0)
         drawPoints()
@@ -86,7 +86,9 @@ class ViewController: UIViewController {
                     path.addLine(to: loc)
                 }
             }
-            path.addLine(to: firstLoc)
+            if isRound {
+                path.addLine(to: firstLoc)
+            }
             let pathLayer = CAShapeLayer()
             pathLayer.path = path.cgPath
             pathLayer.fillColor = UIColor.clear.cgColor
@@ -114,19 +116,75 @@ class ViewController: UIViewController {
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
         sampleBtn.isEnabled = false
-        let body = Body.create(dict: locations)
-        generator = Generator(subject: body)
-        generator?.onNewGeneration = { (person, generation) in
-            DispatchQueue.main.async {
-                self.generationLbl.text = "Generation: \(generation)"
-                self.drawRoute(person)
-                self.startBtn.isEnabled = generation > 250
-                self.clearBtn.isEnabled = generation > 250
-                self.undoBtn.isEnabled = generation > 250
-                self.sampleBtn.isEnabled = generation > 250
+        var vip: Person?
+        var tries = 5
+        var fit: Double?
+        func retry() {
+            let body = Body.create(dict: locations)
+            generator = Generator(subject: body)
+            generator?.onNewGeneration = { (person, generation) in
+                if vip == nil {
+                    vip = person
+                }
+                if vip != nil, person.weight <= vip!.weight {
+                    vip = person
+                }
+                DispatchQueue.main.async {
+                    self.generationLbl.text = "Generation: \(generation)"
+                    self.drawRoute(person.body)
+                }
             }
+            generator?.onEvolutionEnd = { (person, generation) in
+                if vip == nil {
+                    vip = person
+                }
+                if vip != nil, person.weight <= vip!.weight {
+                    vip = person
+                }
+                var vipBody = vip!.body
+                print(Int(person.weight))
+                if fit == nil {
+                    fit = person.weight
+                } else if person.weight < fit! {
+                    fit = person.weight
+                } else if person.weight == fit! {
+                    tries -= 2
+                }
+                tries -= 1
+                if tries > 0 {
+                    retry()
+                } else {
+                    print(vip!.weight.zeros(0))
+                    print(vip!.description)
+                    let count = vipBody.count
+                    for i in 0 ..< count {
+                        let a = vipBody[i]
+                        let b = vipBody[(i + 1) % count]
+                        if a.edgeTo(other: b) == 0 {
+                            for j in 0 ..< count {
+                                let idx = j + i + 1
+                                let a = vipBody[idx % count]
+                                let b = vipBody[(idx + 1) % count]
+                                print("\(a.name)\t(\(a.edgeTo(other: b).zeros(0)))\t\(b.name)")
+                            }
+                            vipBody.rotate(positions: (i + 1) % count)
+                            break
+                        }
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                        self.generationLbl.text = "Finnish: \(vip!.weight.zeros(0))"
+                        self.drawRoute(vipBody, isRound: false)
+                        self.startBtn.isEnabled = true
+                        self.clearBtn.isEnabled = true
+                        self.undoBtn.isEnabled = true
+                        self.sampleBtn.isEnabled = true
+                        
+                    })
+                }
+            }
+            generator?.startEvolution()
         }
-        generator?.startEvolution()
+        retry()
     }
     
     @IBAction func stopTap() {
@@ -148,14 +206,29 @@ class ViewController: UIViewController {
     }
     
     @IBAction func sampleTap() {
-        //var locs = [String : CGPoint]()
-        //for node in nodes {
-        //    locs[node.name] = CGPoint(x: node.x * Body.wFactor, y: node.y * Body.hFactor - 30)
-        //}
-        //locations = locs
+        if locations.isEmpty {
+            let w = Double(mapView.bounds.width / 450)
+            let h = Double(mapView.bounds.height / 900)
+            var locs = [String : CGPoint]()
+            for node in nodes1 {
+                locs[node.name] = CGPoint(x: node.x * w, y: node.y * h - 15)
+            }
+            locations = locs
+            return
+        }
+        if locations.count == 1 {
+            let w = Double(mapView.bounds.width / 420)
+            let h = Double(mapView.bounds.height / 800)
+            var locs = [String : CGPoint]()
+            for node in nodes2 {
+                locs[node.name] = CGPoint(x: node.x * w + 10, y: node.y * h + 10)
+            }
+            locations = locs
+            return
+        }
         let wFactor = Double(mapView.bounds.width - 10)
         let hFactor = Double(mapView.bounds.height - 10)
-        while locations.count > 1, locations.count < 9 {
+        for _ in 0 ..< 10 {
             let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
             locations["\(locations.count)"] = p
         }
@@ -163,35 +236,59 @@ class ViewController: UIViewController {
         locations["\(locations.count)"] = p
     }
     
-    let nodes = [
-        (x:  40.0, y:  70.0, name: "A"),
-        (x: 240.0, y: 630.0, name: "N"),
-        (x: 200.0, y: 140.0, name: "D"),
-        (x: 330.0, y:  80.0, name: "F"),
-        (x: 320.0, y: 700.0, name: "O"),
-        (x: 380.0, y: 140.0, name: "G"),
-        (x: 130.0, y: 180.0, name: "C"),
-        (x:  70.0, y: 130.0, name: "B"),
-        (x: 400.0, y: 210.0, name: "H"),
-        (x: 200.0, y: 490.0, name: "L"),
-        (x: 240.0, y: 420.0, name: "K"),
-        (x: 360.0, y: 280.0, name: "I"),
-        (x: 300.0, y: 350.0, name: "J"),
-        (x: 180.0, y: 570.0, name: "M"),
-        (x: 240.0, y:  80.0, name: "E"),
-        (x: 400.0, y: 750.0, name: "P")
+    let nodes1 = [
+        (x:  50.0, y:  50.0, name:  "1"),
+        (x: 230.0, y: 650.0, name: "12"),
+        (x: 200.0, y: 140.0, name:  "5"),
+        (x: 335.0, y:  85.0, name:  "9"),
+        (x: 310.0, y: 710.0, name: "11"),
+        (x: 390.0, y: 130.0, name: "14"),
+        (x: 130.0, y: 170.0, name:  "3"),
+        (x:  70.0, y: 125.0, name:  "2"),
+        (x: 390.0, y: 210.0, name:  "7"),
+        (x: 190.0, y: 490.0, name: "10"),
+        (x: 240.0, y: 420.0, name: "15"),
+        (x: 360.0, y: 280.0, name:  "4"),
+        (x: 300.0, y: 350.0, name: "13"),
+        (x: 170.0, y: 580.0, name:  "8"),
+        (x: 260.0, y:  90.0, name:  "6"),
+        (x: 400.0, y: 760.0, name:  "0")
+    ]
+    
+    let nodes2 = [
+        (x:  34, y: 259, name:  "7"),
+        (x: 230, y: 374, name: "17"),
+        (x: 159, y: 109, name:  "9"),
+        (x: 288, y: 750, name: "22"),
+        (x: 253, y: 449, name: "18"),
+        (x: 380, y: 669, name: "21"),
+        (x: 379, y: 773, name:  "0"),
+        (x: 290, y: 212, name: "15"),
+        (x: 391, y:  71, name: "13"),
+        (x: 334, y: 595, name: "20"),
+        (x: 340, y: 135, name: "14"),
+        (x: 401, y: 741, name:  "1"),
+        (x: 289, y: 530, name: "19"),
+        (x: 229, y:  44, name: "10"),
+        (x:  87, y: 184, name:  "8"),
+        (x: 398, y: 3.5, name: "12"),
+        (x: 213, y: 706, name:  "2"),
+        (x: 310, y: 3.5, name: "11"),
+        (x: 255, y: 290, name: "16"),
+        (x: 147, y: 631, name:  "3"),
+        (x:  88, y: 549, name:  "4"),
+        (x:  35, y: 450, name:  "5"),
+        (x:20.5, y: 349, name:  "6")
     ]
 }
 
 
 extension Body {
     
-    static let wFactor = Double(UIScreen.main.bounds.width / 450)
-    static let hFactor = Double(UIScreen.main.bounds.height / 900)
     static let a = "0"
     static let b = "1"
     static let c = 0.0
-
+    
     static func create(dict: [String : CGPoint]) -> Body {
         var body = Body()
         for point in dict {
@@ -211,9 +308,10 @@ extension Body {
     }
     
     func setWeights() {
+        Organ.clearEdges()
         for o1 in self {
             for o2 in self {
-                guard o1 != o2 else { continue }
+                //guard o1 != o2 else { continue }
                 if o1.name == Body.a, o2.name == Body.b {
                     o1.set(weight: Body.c, to: o2)
                     continue

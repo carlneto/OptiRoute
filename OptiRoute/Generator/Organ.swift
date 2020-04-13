@@ -2,9 +2,9 @@ protocol Fitness {
     func setWeights()
 }
 
-class Organ: Equatable {
+class Organ: Equatable, Hashable {
     
-    private static var weights = [[String] : Double]()
+    private static var edges = [[String] : Double]()
     
     private static var body = [String : Organ]()
     
@@ -17,16 +17,22 @@ class Organ: Equatable {
         self.content = content
     }
     
-    func weightTo(other: Organ) -> Double {
-        if let aWeight = Organ.weights[[self.name, other.name]] {
-            return aWeight
-        }
-        fatalError("Weight from: `\(name)` to `\(other.name)`,\n is not in weights:\n \(Organ.weights).\n*See: `\(#function)`!")
+    func edgeTo(other: Organ) -> Double {
+        if let aWeight = Organ.edges[[self.name, other.name]] { return aWeight }
+        fatalError("Weight from: `\(name)` to `\(other.name)`,\n is not in weights:\n \(Organ.edges).\n*See: `\(#function)`!")
     }
     
     func set(weight: Double, to other: Organ) {
-        Organ.weights[[self.name, other.name]] = weight
-        Organ.weights[[other.name, self.name]] = weight
+        Organ.edges[[self.name, other.name]] = weight
+        Organ.edges[[other.name, self.name]] = weight
+    }
+    
+    static func clearEdges() {
+        edges = [[String] : Double]()
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
     }
     
     static func == (lhs: Organ, rhs: Organ) -> Bool {
@@ -53,5 +59,15 @@ extension Body: Fitness {
         let organ = Organ.create(name: name, content: core)
         self.append(organ)
         return organ
+    }
+    
+    func generatePeople(size: Int) -> People {
+        var result = People()
+        if size > 0 {
+            for _ in 0 ..< size {
+                result.append(Person(body: self.shuffle()))
+            }
+        }
+        return result
     }
 }
