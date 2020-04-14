@@ -35,6 +35,8 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         resetLocations(arr: userLocations.keyForRead())
         "locations".keyToRemoveObject(sync: false)
+        //Dijkstra.runSPF(samples: nodes1)
+        //BreadthFirstSearch.runBreadthFirstSearch(samples: nodes1)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -279,6 +281,14 @@ class ViewController: UIViewController {
         (x:  88, y: 549, name:  "4"),
         (x:  35, y: 450, name:  "5"),
         (x:20.5, y: 349, name:  "6")
+    ]
+    
+    let nodes3 = [
+        (x:  50.0, y:  50.0, name:  "1"),
+        (x: 130.0, y: 170.0, name:  "3"),
+        (x:  70.0, y: 125.0, name:  "2"),
+        (x: 360.0, y: 280.0, name:  "4"),
+        (x: 400.0, y: 760.0, name:  "0")
     ]
 }
 
