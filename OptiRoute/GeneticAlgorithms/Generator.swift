@@ -9,6 +9,7 @@ class Generator {
     
     private(set) var bestOne: Person?
     private var body: Body
+    private var organs: Body?
     private var people = People()
     private var evolving = false
     private var peopleSize = 0
@@ -24,10 +25,58 @@ class Generator {
         }
     }
     
+    func sort() {
+        var edges = body.sortedWeights()
+        var organs = [Organ]()
+        guard let item = edges.first else { return }
+        var leftOrgan = item.o1
+        var rightOrgan = item.o2
+        organs.append(leftOrgan)
+        organs.append(rightOrgan)
+        edges.removeFirst()
+        func add(_ aOrgan: Organ) {
+            if !organs.contains(aOrgan) { organs.append(aOrgan) }
+        }
+        func leftAdd(_ aOrgan: Organ) {
+            leftOrgan = aOrgan
+            add(leftOrgan)
+        }
+        func rightAdd(_ aOrgan: Organ) {
+            rightOrgan = aOrgan
+            add(rightOrgan)
+        }
+        while organs.count < body.count {
+            for i in 0 ..< edges.count {
+                let edge = edges[i]
+                var toRemove = false
+                if leftOrgan == edge.o1 {
+                    leftAdd(edge.o2)
+                    toRemove = true
+                } else if leftOrgan == edge.o2 {
+                    leftAdd(edge.o1)
+                    toRemove = true
+                }
+                if rightOrgan == edge.o1 {
+                    rightAdd(edge.o2)
+                    toRemove = true
+                } else if rightOrgan == edge.o2 {
+                    rightAdd(edge.o1)
+                    toRemove = true
+                }
+                if toRemove {
+                    edges.remove(at: i)
+                    break
+                }
+            }
+        }
+        body = organs
+    }
+    
     func startEvolution() {
         print("\npop:\(peopleSize) bodyCount:\(body.count) time:\(timeLimit.zeros(1))")
         evolving = true
         benchTimer.restart()
+        sort()
         let lim = self.body.count / 2
         let itrs = Swift.max(1, 4 - Swift.max(1, (body.count + 1) / 8))
         func setPeople() {
@@ -58,6 +107,8 @@ class Generator {
                         if counter > 3 {
                             let randomSize = Swift.min(self.peopleSize / 2, (counter - 3) * self.peopleSize / 8)
                             nextGeneration += self.body.generatePeople(size: randomSize)
+                            //nextGeneration.append(Person(body: self.body))
+                            //self.body.rotate(positions: 1)
                         }
                         counter += 1
                     }
@@ -80,7 +131,7 @@ class Generator {
                 guard counter > lim || self.benchTimer.elapsed > self.timeLimit else { continue }
                 self.stopEvolution()
                 guard let bestRoute = self.bestOne else { return }
-                self.onNewGeneration?(bestRoute, Int(bestRoute.weight))
+                //self.onNewGeneration?(bestRoute, Int(bestRoute.weight))
                 print("\npop:\(self.peopleSize), counter: \(counter) > \(lim) || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }

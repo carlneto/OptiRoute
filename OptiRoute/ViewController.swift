@@ -116,75 +116,41 @@ class ViewController: UIViewController {
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
         sampleBtn.isEnabled = false
-        var vip: Person?
-        var tries = 5
-        var fit: Double?
-        func retry() {
-            let body = Body.create(dict: locations)
-            generator = Generator(subject: body)
-            generator?.onNewGeneration = { (person, generation) in
-                if vip == nil {
-                    vip = person
-                }
-                if vip != nil, person.weight <= vip!.weight {
-                    vip = person
-                }
-                DispatchQueue.main.async {
-                    self.generationLbl.text = "Generation: \(generation)"
-                    self.drawRoute(person.body)
-                }
+        
+        let isRound = false
+        let body = Body.create(dict: locations, isRound: isRound)
+        generator = Generator(subject: body)
+        generator?.onNewGeneration = { (person, generation) in
+            DispatchQueue.main.async {
+                self.generationLbl.text = "Generation: \(generation)"
+                self.drawRoute(person.body)
             }
-            generator?.onEvolutionEnd = { (person, generation) in
-                if vip == nil {
-                    vip = person
-                }
-                if vip != nil, person.weight <= vip!.weight {
-                    vip = person
-                }
-                var vipBody = vip!.body
-                print(Int(person.weight))
-                if fit == nil {
-                    fit = person.weight
-                } else if person.weight < fit! {
-                    fit = person.weight
-                } else if person.weight == fit! {
-                    tries -= 2
-                }
-                tries -= 1
-                if tries > 0 {
-                    retry()
-                } else {
-                    print(vip!.weight.zeros(0))
-                    print(vip!.description)
+        }
+        generator?.onEvolutionEnd = { (person, generation) in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
+                var vipBody = person.body
+                if !isRound {
                     let count = vipBody.count
-                    for i in 0 ..< count {
-                        let a = vipBody[i]
+                    for i in 0 ..< (count * 2) {
+                        let a = vipBody[i % count]
                         let b = vipBody[(i + 1) % count]
-                        if a.edgeTo(other: b) == 0 {
-                            for j in 0 ..< count {
-                                let idx = j + i + 1
-                                let a = vipBody[idx % count]
-                                let b = vipBody[(idx + 1) % count]
-                                print("\(a.name)\t(\(a.edgeTo(other: b).zeros(0)))\t\(b.name)")
-                            }
+                        print("\(a.name)\t(\(a.muscleTo(other: b).zeros(0)))\t\(b.name)")
+                        if a.muscleTo(other: b) < 0.1 {
                             vipBody.rotate(positions: (i + 1) % count)
                             break
                         }
                     }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                        self.generationLbl.text = "Finnish: \(vip!.weight.zeros(0))"
-                        self.drawRoute(vipBody, isRound: false)
-                        self.startBtn.isEnabled = true
-                        self.clearBtn.isEnabled = true
-                        self.undoBtn.isEnabled = true
-                        self.sampleBtn.isEnabled = true
-                        
-                    })
                 }
-            }
-            generator?.startEvolution()
+                print(vipBody.str)
+                self.generationLbl.text = "Finnish: \(person.weight.zeros(0))"
+                self.drawRoute(vipBody, isRound: isRound)
+                self.startBtn.isEnabled = true
+                self.clearBtn.isEnabled = true
+                self.undoBtn.isEnabled = true
+                self.sampleBtn.isEnabled = true
+            })
         }
-        retry()
+        generator?.startEvolution()
     }
     
     @IBAction func stopTap() {
@@ -280,53 +246,46 @@ class ViewController: UIViewController {
         (x:  35, y: 450, name:  "5"),
         (x:20.5, y: 349, name:  "6")
     ]
-    
-    let nodes3 = [
-        (x:  50.0, y:  50.0, name:  "1"),
-        (x: 130.0, y: 170.0, name:  "3"),
-        (x:  70.0, y: 125.0, name:  "2"),
-        (x: 360.0, y: 280.0, name:  "4"),
-        (x: 400.0, y: 760.0, name:  "0")
-    ]
 }
 
 
 extension Body {
     
-    static let a = "0"
-    static let b = "1"
-    static let c = 0.0
+    static let aName = "0"
+    static let bName = "1"
+    static let cWeight = 0.0
     
-    static func create(dict: [String : CGPoint]) -> Body {
+    static func create(dict: [String : CGPoint], isRound: Bool) -> Body {
         var body = Body()
         for point in dict {
             _ = body.inserted(name: "\(point.key)", content: point.value)
         }
-        body.setWeights()
+        body.setWeights(isRound: isRound)
         return body
     }
     
-    static func create(points: [CGPoint]) -> Body {
+    static func create(points: [CGPoint], isRound: Bool) -> Body {
         var body = Body()
         for (idx, point) in points.enumerated() {
             _ = body.inserted(name: "\(idx)", content: point)
         }
-        body.setWeights()
+        body.setWeights(isRound: isRound)
         return body
     }
     
-    func setWeights() {
-        Organ.clearEdges()
+    func setWeights(isRound: Bool) {
+        Organ.relaxMuscles()
         for o1 in self {
             for o2 in self {
-                //guard o1 != o2 else { continue }
-                if o1.name == Body.a, o2.name == Body.b {
-                    o1.set(weight: Body.c, to: o2)
-                    continue
-                }
-                if o1.name == Body.b, o2.name == Body.a {
-                    o1.set(weight: Body.c, to: o2)
-                    continue
+                if !isRound {
+                    if o1.name == Body.aName, o2.name == Body.bName {
+                        o1.set(weight: Body.cWeight, to: o2)
+                        continue
+                    }
+                    if o1.name == Body.bName, o2.name == Body.aName {
+                        o1.set(weight: Body.cWeight, to: o2)
+                        continue
+                    }
                 }
                 let p1 = o1.content as! CGPoint
                 let p2 = o2.content as! CGPoint

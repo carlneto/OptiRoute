@@ -1,10 +1,10 @@
 protocol Fitness {
-    func setWeights()
+    func setWeights(isRound: Bool)
 }
 
-class Organ: Equatable, Hashable {
+class Organ: Equatable, Hashable, Comparable {
     
-    private static var edges = [[String] : Double]()
+    private static var muscles = [[String] : Double]()
     
     private static var body = [String : Organ]()
     
@@ -17,26 +17,34 @@ class Organ: Equatable, Hashable {
         self.content = content
     }
     
-    func edgeTo(other: Organ) -> Double {
-        if let aWeight = Organ.edges[[self.name, other.name]] { return aWeight }
-        fatalError("Weight from: `\(name)` to `\(other.name)`,\n is not in weights:\n \(Organ.edges).\n*See: `\(#function)`!")
+    func muscleTo(other: Organ) -> Double {
+        if let aWeight = Organ.muscles[[self.name, other.name]] { return aWeight }
+        fatalError("Muscle from: `\(name)` to `\(other.name)`,\n is not in muscle estruture:\n \(Organ.muscles).\n*See: `\(#function)`!")
     }
     
     func set(weight: Double, to other: Organ) {
-        Organ.edges[[self.name, other.name]] = weight
-        Organ.edges[[other.name, self.name]] = weight
-    }
-    
-    static func clearEdges() {
-        edges = [[String] : Double]()
+        Organ.muscles[[self.name, other.name]] = weight
+        Organ.muscles[[other.name, self.name]] = weight
     }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
     
+    var str: String {
+        return name
+    }
+    
+    static func relaxMuscles() {
+        Organ.muscles = [[String] : Double]()
+    }
+    
     static func == (lhs: Organ, rhs: Organ) -> Bool {
         return lhs.name == rhs.name
+    }
+    
+    static func < (lhs: Organ, rhs: Organ) -> Bool {
+        return lhs.name < rhs.name
     }
     
     fileprivate static func create(name: String, content: Any) -> Organ {
@@ -69,5 +77,39 @@ extension Body: Fitness {
             }
         }
         return result
+    }
+    
+    func sortedWeights() -> [(o1: Organ, o2: Organ, weight: Double)] {
+        var edges = [(o1: Organ, o2: Organ, weight: Double)]()
+        for o1 in self {
+            for o2 in self {
+                guard o1 != o2 else { continue }
+                var notExists = true
+                for edge in edges {
+                    if edge.o1.name == o1.name, edge.o2.name == o2.name {
+                        notExists = false
+                        break
+                    } else if edge.o1.name == o2.name, edge.o2.name == o1.name {
+                        notExists = false
+                        break
+                    }
+                }
+                guard notExists else { continue }
+                let weight = o1.muscleTo(other: o2)
+                guard weight > 0 else { continue }
+                let edge = (o1: o1, o2: o2, weight: weight)
+                edges.append(edge)
+            }
+        }
+        let sorted = edges.sorted { $0.weight < $1.weight }
+        return sorted
+    }
+    
+    var str: String {
+        var ret = "["
+        for organ in self {
+            ret += " " + organ.str + ","
+        }
+        return ret + "]"
     }
 }

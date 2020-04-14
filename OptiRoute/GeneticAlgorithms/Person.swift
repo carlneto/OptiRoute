@@ -16,13 +16,12 @@ class Person: Hashable {
     
     private func calculateWeight() -> Double {
         var result: Double = 0.0
-        var previousOrgan: Organ?
+        var previousOrgan = body.last
         body.forEach { organ in
-            if let previous = previousOrgan { result += previous.edgeTo(other: organ) }
+            if let previousOrgan = previousOrgan { result += previousOrgan.muscleTo(other: organ) }
             previousOrgan = organ
         }
-        guard let first = body.first, let last = body.last else { return result }
-        return result + first.edgeTo(other: last)
+        return result
     }
 
     var description: String {
