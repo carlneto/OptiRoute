@@ -19,15 +19,6 @@
 		AFA590582438A33200FF4BDC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AFA590562438A33200FF4BDC /* Main.storyboard */; };
 		AFA5905A2438A33600FF4BDC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AFA590592438A33600FF4BDC /* Assets.xcassets */; };
 		AFA5905D2438A33600FF4BDC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AFA5905B2438A33600FF4BDC /* LaunchScreen.storyboard */; };
-		AFB9B65F2444F70E008976B1 /* Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9B65E2444F70E008976B1 /* Graph.swift */; };
-		AFB9B6612444F726008976B1 /* GraphNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9B6602444F726008976B1 /* GraphNode.swift */; };
-		AFB9B6632444F744008976B1 /* Queue.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9B6622444F744008976B1 /* Queue.swift */; };
-		AFB9B665244509A3008976B1 /* Connection.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFB9B664244509A3008976B1 /* Connection.swift */; };
-		AFEF52E92444DF8F00A2F44A /* Node.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEF52E82444DF8F00A2F44A /* Node.swift */; };
-		AFEF52EB2444DF9C00A2F44A /* Edge.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEF52EA2444DF9C00A2F44A /* Edge.swift */; };
-		AFEF52ED2444DFD200A2F44A /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEF52EC2444DFD200A2F44A /* Track.swift */; };
-		AFEF52EF2444E25B00A2F44A /* Dijkstra.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEF52EE2444E25B00A2F44A /* Dijkstra.swift */; };
-		AFEF52F12444F5D000A2F44A /* BreadthFirstSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFEF52F02444F5D000A2F44A /* BreadthFirstSearch.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,15 +37,6 @@
 		AFA5905C2438A33600FF4BDC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AFA5905E2438A33600FF4BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AFA590642438A40100FF4BDC /* OptiRoute.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OptiRoute.entitlements; sourceTree = "<group>"; };
-		AFB9B65E2444F70E008976B1 /* Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Graph.swift; sourceTree = "<group>"; };
-		AFB9B6602444F726008976B1 /* GraphNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GraphNode.swift; sourceTree = "<group>"; };
-		AFB9B6622444F744008976B1 /* Queue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Queue.swift; sourceTree = "<group>"; };
-		AFB9B664244509A3008976B1 /* Connection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Connection.swift; sourceTree = "<group>"; };
-		AFEF52E82444DF8F00A2F44A /* Node.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Node.swift; sourceTree = "<group>"; };
-		AFEF52EA2444DF9C00A2F44A /* Edge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Edge.swift; sourceTree = "<group>"; };
-		AFEF52EC2444DFD200A2F44A /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
-		AFEF52EE2444E25B00A2F44A /* Dijkstra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dijkstra.swift; sourceTree = "<group>"; };
-		AFEF52F02444F5D000A2F44A /* BreadthFirstSearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BreadthFirstSearch.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,8 +53,6 @@
 		AF0D279A244245AF0084BD57 /* GraphAlgoritms */ = {
 			isa = PBXGroup;
 			children = (
-				AFB9B66824450D0B008976B1 /* Dijkstra */,
-				AFB9B66724450CFB008976B1 /* BreadthFirstSearch */,
 			);
 			path = GraphAlgoritms;
 			sourceTree = "<group>";
@@ -129,29 +109,6 @@
 				AFA590562438A33200FF4BDC /* Main.storyboard */,
 			);
 			path = OptiRoute;
-			sourceTree = "<group>";
-		};
-		AFB9B66724450CFB008976B1 /* BreadthFirstSearch */ = {
-			isa = PBXGroup;
-			children = (
-				AFEF52F02444F5D000A2F44A /* BreadthFirstSearch.swift */,
-				AFB9B65E2444F70E008976B1 /* Graph.swift */,
-				AFB9B6602444F726008976B1 /* GraphNode.swift */,
-				AFB9B6622444F744008976B1 /* Queue.swift */,
-				AFB9B664244509A3008976B1 /* Connection.swift */,
-			);
-			path = BreadthFirstSearch;
-			sourceTree = "<group>";
-		};
-		AFB9B66824450D0B008976B1 /* Dijkstra */ = {
-			isa = PBXGroup;
-			children = (
-				AFEF52E82444DF8F00A2F44A /* Node.swift */,
-				AFEF52EA2444DF9C00A2F44A /* Edge.swift */,
-				AFEF52EC2444DFD200A2F44A /* Track.swift */,
-				AFEF52EE2444E25B00A2F44A /* Dijkstra.swift */,
-			);
-			path = Dijkstra;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -227,21 +184,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				AF26D995243DEABC00393514 /* People.swift in Sources */,
-				AFEF52ED2444DFD200A2F44A /* Track.swift in Sources */,
-				AFB9B65F2444F70E008976B1 /* Graph.swift in Sources */,
 				AFA590552438A33200FF4BDC /* ViewController.swift in Sources */,
 				AFA590512438A33200FF4BDC /* AppDelegate.swift in Sources */,
-				AFB9B6632444F744008976B1 /* Queue.swift in Sources */,
-				AFEF52E92444DF8F00A2F44A /* Node.swift in Sources */,
-				AFEF52EF2444E25B00A2F44A /* Dijkstra.swift in Sources */,
 				AF26D98E243DE3FC00393514 /* Organ.swift in Sources */,
 				AF26D98C243DD62700393514 /* Extensions.swift in Sources */,
 				AF26D993243DE83000393514 /* Generator.swift in Sources */,
-				AFB9B665244509A3008976B1 /* Connection.swift in Sources */,
-				AFB9B6612444F726008976B1 /* GraphNode.swift in Sources */,
 				AF26D990243DE44C00393514 /* Person.swift in Sources */,
-				AFEF52F12444F5D000A2F44A /* BreadthFirstSearch.swift in Sources */,
-				AFEF52EB2444DF9C00A2F44A /* Edge.swift in Sources */,
 				AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

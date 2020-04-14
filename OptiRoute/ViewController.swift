@@ -35,8 +35,6 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         resetLocations(arr: userLocations.keyForRead())
         "locations".keyToRemoveObject(sync: false)
-        //Dijkstra.runSPF(samples: nodes1)
-        //BreadthFirstSearch.runBreadthFirstSearch(samples: nodes1)
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
