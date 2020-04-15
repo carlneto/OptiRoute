@@ -26,48 +26,27 @@ class Generator {
     }
     
     func sort() {
-        var edges = body.sortedWeights()
+        guard let pair = body.closestPair else { return }
+        var base = body
         var organs = [Organ]()
-        guard let item = edges.first else { return }
-        var leftOrgan = item.o1
-        var rightOrgan = item.o2
-        organs.append(leftOrgan)
-        organs.append(rightOrgan)
-        edges.removeFirst()
-        func add(_ aOrgan: Organ) {
-            if !organs.contains(aOrgan) { organs.append(aOrgan) }
+        func remove(org: Organ) -> Organ? {
+            guard let idx = base.firstIndex(of: org) else { return nil }
+            return base.remove(at: idx)
         }
-        func leftAdd(_ aOrgan: Organ) {
-            leftOrgan = aOrgan
-            add(leftOrgan)
+        func moved(organ: Organ) -> Organ? {
+            guard let newOrgan = remove(org: organ) else { return nil }
+            organs.append(newOrgan)
+            return newOrgan
         }
-        func rightAdd(_ aOrgan: Organ) {
-            rightOrgan = aOrgan
-            add(rightOrgan)
-        }
+        var left = moved(organ: pair.o1)
+//        var right = moved(organ: pair.o2)
+//        while organs.count < body.count / 2 {
+//            guard let o2 = right else { continue }
+//            right = moved(organ: o2.closest(body: base))
+//        }
         while organs.count < body.count {
-            for i in 0 ..< edges.count {
-                let edge = edges[i]
-                var toRemove = false
-                if leftOrgan == edge.o1 {
-                    leftAdd(edge.o2)
-                    toRemove = true
-                } else if leftOrgan == edge.o2 {
-                    leftAdd(edge.o1)
-                    toRemove = true
-                }
-                if rightOrgan == edge.o1 {
-                    rightAdd(edge.o2)
-                    toRemove = true
-                } else if rightOrgan == edge.o2 {
-                    rightAdd(edge.o1)
-                    toRemove = true
-                }
-                if toRemove {
-                    edges.remove(at: i)
-                    break
-                }
-            }
+            guard let o1 = left else { continue }
+            left = moved(organ: o1.closest(body: base))
         }
         body = organs
     }
@@ -95,6 +74,8 @@ class Generator {
             var counter = 0
             while self.evolving {
                 var nextGeneration = People()
+                nextGeneration.append(Person(body: self.body))
+                self.body.rotate(positions: 1)
                 let stats = self.people.stats
                 if let newBest = stats.vip {
                     if self.bestOne == nil {
@@ -107,8 +88,6 @@ class Generator {
                         if counter > 3 {
                             let randomSize = Swift.min(self.peopleSize / 2, (counter - 3) * self.peopleSize / 8)
                             nextGeneration += self.body.generatePeople(size: randomSize)
-                            //nextGeneration.append(Person(body: self.body))
-                            //self.body.rotate(positions: 1)
                         }
                         counter += 1
                     }

@@ -134,7 +134,7 @@ class ViewController: UIViewController {
                     for i in 0 ..< (count * 2) {
                         let a = vipBody[i % count]
                         let b = vipBody[(i + 1) % count]
-                        print("\(a.name)\t(\(a.muscleTo(other: b).zeros(0)))\t\(b.name)")
+                        //print("\(a.name)\t\t(\(a.muscleTo(other: b).zeros(0)))\t\t\(b.name)")
                         if a.muscleTo(other: b) < 0.1 {
                             vipBody.rotate(positions: (i + 1) % count)
                             break

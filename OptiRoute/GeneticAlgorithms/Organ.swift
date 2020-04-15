@@ -27,6 +27,24 @@ class Organ: Equatable, Hashable, Comparable {
         Organ.muscles[[other.name, self.name]] = weight
     }
     
+    func closest(body: Body) -> Organ {
+        var closestOrgan = self
+        var weight: Double?
+        for org in body {
+            let muscle = muscleTo(other: org)
+            guard let w = weight else {
+                closestOrgan = org
+                weight = muscle
+                continue
+            }
+            if muscle < w {
+                closestOrgan = org
+                weight = muscle
+            }
+        }
+        return closestOrgan
+    }
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
@@ -79,30 +97,28 @@ extension Body: Fitness {
         return result
     }
     
-    func sortedWeights() -> [(o1: Organ, o2: Organ, weight: Double)] {
-        var edges = [(o1: Organ, o2: Organ, weight: Double)]()
+    var closestPair: (o1: Organ, o2: Organ, weight: Double)? {
+        var left: Organ?
+        var right: Organ?
+        var best: Double?
         for o1 in self {
             for o2 in self {
                 guard o1 != o2 else { continue }
-                var notExists = true
-                for edge in edges {
-                    if edge.o1.name == o1.name, edge.o2.name == o2.name {
-                        notExists = false
-                        break
-                    } else if edge.o1.name == o2.name, edge.o2.name == o1.name {
-                        notExists = false
-                        break
-                    }
-                }
-                guard notExists else { continue }
                 let weight = o1.muscleTo(other: o2)
-                guard weight > 0 else { continue }
-                let edge = (o1: o1, o2: o2, weight: weight)
-                edges.append(edge)
+                guard let bestWeight = best else {
+                    left = o1
+                    right = o2
+                    best = weight
+                    continue
+                }
+                guard weight > 0, weight < bestWeight else { continue }
+                left = o1
+                right = o2
+                best = weight
             }
         }
-        let sorted = edges.sorted { $0.weight < $1.weight }
-        return sorted
+        guard let l = left, let r = right,  let w = best else { return nil }
+        return (o1: l, o2: r, weight: w)
     }
     
     var str: String {
