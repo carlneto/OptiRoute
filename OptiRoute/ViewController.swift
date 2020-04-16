@@ -28,6 +28,7 @@ class ViewController: UIViewController {
             }
             userLocations.keyForSaving(strs)
             drawPoints()
+            generationLbl.text = "Locations: \(locations.count)"
         }
     }
     
@@ -136,7 +137,7 @@ class ViewController: UIViewController {
                         let b = vipBody[(i + 1) % count]
                         //print("\(a.name)\t\t(\(a.muscleTo(other: b).zeros(0)))\t\t\(b.name)")
                         if a.muscleTo(other: b) < 0.1 {
-                            vipBody.rotate(positions: (i + 1) % count)
+                            vipBody.rotate(offset: (i + 1) % count)
                             break
                         }
                     }
@@ -168,16 +169,16 @@ class ViewController: UIViewController {
     @IBAction func clearTap() {
         locations.removeAll()
         mapView.layer.sublayers?.removeAll()
-        generationLbl.text = "Generation: 0"
+        generationLbl.text = "Locations: \(locations.count)"
     }
     
     @IBAction func sampleTap() {
         if locations.isEmpty {
             let w = Double(mapView.bounds.width / 450)
-            let h = Double(mapView.bounds.height / 900)
+            let h = Double(mapView.bounds.height / 800)
             var locs = [String : CGPoint]()
             for node in nodes1 {
-                locs[node.name] = CGPoint(x: node.x * w, y: node.y * h - 15)
+                locs[node.name] = CGPoint(x: node.x * w, y: node.y * h - 5)
             }
             locations = locs
             return
@@ -194,12 +195,26 @@ class ViewController: UIViewController {
         }
         let wFactor = Double(mapView.bounds.width - 10)
         let hFactor = Double(mapView.bounds.height - 10)
-        for _ in 0 ..< 10 {
-            let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+        for _ in 1 ... 9 {
+            var p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+            while locationsContains(point: p)  {
+                p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
+            }
             locations["\(locations.count)"] = p
         }
         let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
         locations["\(locations.count)"] = p
+    }
+    
+    func locationsContains(point: CGPoint) -> Bool {
+        for loc in locations {
+            let p0 = loc.value
+            let h = hypot(Double(p0.x - point.x), Double(p0.y - point.y))
+            if h < 30 {
+                return true
+            }
+        }
+        return false
     }
     
     let nodes1 = [

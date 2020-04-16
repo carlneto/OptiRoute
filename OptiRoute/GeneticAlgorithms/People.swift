@@ -3,7 +3,7 @@ import UIKit
 typealias People = [Person]
 
 extension People {
-     
+    
     var totalWeight: Double {
         return self.reduce(0.0, { $0 + $1.weight })
     }
@@ -25,14 +25,36 @@ extension People {
         return currentGeneration
     }
     
+    mutating func fillWith(organs: Body) {
+        let bodies = [organs,
+                      organs.sortFromFirst,
+                      organs.sortFromBorders,
+                      organs.sortFromFarestPair(hugging: false),
+                      organs.sortFromFarestPair(hugging: true)
+        ]
+        for body in bodies {
+            append(Person(body: body))
+            for gen in body.generate(size: 2) {
+                append(Person(body: gen))
+                append(Person(body: gen.sortFromFirst))
+                append(Person(body: gen.sortFromBorders))
+                append(Person(body: gen.sortFromFarestPair(hugging: false)))
+                append(Person(body: gen.sortFromFarestPair(hugging: true)))
+            }
+        }
+    }
+    
+    mutating func removeDuplicates() {
+        self = Array(Set(self))
+    }
+    
     /// People operators
     private func elitistParent(with weightTotal: Double) -> Person? {
         let fitness = Double(arc4random()) / Double(UINT32_MAX)
         var currentFitness: Double = 0.0
         var result: Person?
-        forEach { body in //TODO: This is using the 'elitist' method, convert it to a 'roulette'
+        forEach { body in
             if currentFitness <= fitness {
-                //currentFitness += body.fitnessProb(withTotalWeight: weightTotal)
                 currentFitness += (1 - body.weight / weightTotal)
                 result = body
             }
@@ -58,29 +80,4 @@ extension People {
         }
         return nil
     }
-    
-//    func tournament(size: Int = 4) -> People {
-//        var people = self
-//        var matingPeople = People()
-//        repeat {
-//            var fighters = [Int: Person]()
-//            var highestFighterIndex = 0
-//            var highestFighterFitness = 0.0
-//            repeat {
-//                let idx = Int(arc4random_uniform(UInt32(people.count)))
-//                let person = people[idx]
-//                fighters[idx] = person
-//                let fitness = person.weight
-//                if fitness > highestFighterFitness {
-//                    highestFighterFitness = fitness
-//                    highestFighterIndex = idx
-//                }
-//            } while fighters.count < size
-//            if let highestFighter = fighters[highestFighterIndex] {
-//                matingPeople.append(highestFighter)
-//                people.remove(at: highestFighterIndex)
-//            }
-//        } while matingPeople.count < count / 2
-//        return matingPeople
-//    }
 }
