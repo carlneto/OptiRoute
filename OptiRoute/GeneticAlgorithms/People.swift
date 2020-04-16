@@ -26,20 +26,19 @@ extension People {
     }
     
     mutating func fillWith(organs: Body) {
-        let bodies = [organs,
-                      organs.sortFromFirst,
-                      organs.sortFromBorders,
-                      organs.sortFromFarestPair(hugging: false),
-                      organs.sortFromFarestPair(hugging: true)
+        let twigs = [organs,
+                     organs.sortedFirst(),
+                     organs.sortedBoth(),
+                     organs.sorted(ascending: true, both: false),
+                     organs.sorted(ascending: true, both: true),
+                     organs.sorted(ascending: false, both: false),
+                     organs.sorted(ascending: false, both: true),
         ]
-        for body in bodies {
+        for body in twigs {
             append(Person(body: body))
-            for gen in body.generate(size: 2) {
-                append(Person(body: gen))
-                append(Person(body: gen.sortFromFirst))
-                append(Person(body: gen.sortFromBorders))
-                append(Person(body: gen.sortFromFarestPair(hugging: false)))
-                append(Person(body: gen.sortFromFarestPair(hugging: true)))
+            for other in twigs {
+                guard other != body else { continue }
+                append(Person(body: body.mutate(withOther: other, probability: 0.68)))
             }
         }
     }

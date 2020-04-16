@@ -57,9 +57,7 @@ extension String {
 
 extension RangeReplaceableCollection {
     mutating func rotate(offset: Int) {
-        var positions = offset
-        while positions < 0 { positions += count }
-        positions %= count
+        let positions = offset % count
         let index = self.index(startIndex, offsetBy: positions, limitedBy: endIndex) ?? endIndex
         let slice = self[..<index]
         removeSubrange(..<index)

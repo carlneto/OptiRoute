@@ -29,9 +29,10 @@ class Generator {
         evolving = true
         benchTimer.restart()
         setRandomPeople()
-        let lim = Swift.min(12, Int(Double(self.body.count) * 0.4))
         DispatchQueue.global().async {
-            var counter = 0
+            let k = 9
+            let barrier = k - 2
+            var counter = k
             while self.evolving {
                 var nextGeneration = People()
                 let stats = self.people.stats
@@ -39,23 +40,18 @@ class Generator {
                     if self.bestOne == nil {
                         self.bestOne = newBest
                         nextGeneration.fillWith(organs: self.body)
-                        nextGeneration.fillWith(organs: newBest.body)
                     }
                     if let best = self.bestOne, newBest.weight < best.weight {
                         self.bestOne = newBest
-                        //print(counter, terminator: ", ")
-                        counter = 0
+                        nextGeneration.fillWith(organs: newBest.body)
+                        counter = k
                     } else {
-                        let barrier = 2
-                        if counter > barrier {
+                        if counter < barrier {
                             nextGeneration.fillWith(organs: newBest.body)
-                            if let bestBody = self.bestOne?.body {
-                                nextGeneration.fillWith(organs: bestBody)
-                            }
-                            let randomSize = Swift.min(self.peopleSize / 3, (counter - barrier + 1) * self.peopleSize / 8)
-                            nextGeneration += self.body.generatePeople(size: randomSize)
+                            let randomSize = Swift.min(self.peopleSize / 3, (barrier - counter) * self.peopleSize / 8)
+                            nextGeneration += newBest.body.generatePeople(size: randomSize)
                         }
-                        counter += 1
+                        counter -= 1
                     }
                     self.onNewGeneration?(self.bestOne ?? newBest, self.generationCounter)
                 }
@@ -73,11 +69,10 @@ class Generator {
                 }
                 self.people = nextGeneration
                 self.generationCounter += 1
-                guard counter > lim || self.benchTimer.elapsed > self.timeLimit else { continue }
+                guard counter < 0 || self.benchTimer.elapsed > self.timeLimit else { continue }
                 self.stopEvolution()
                 guard let bestRoute = self.bestOne else { return }
-                //self.onNewGeneration?(bestRoute, Int(bestRoute.weight))
-                print("pop:\(self.peopleSize), counter: \(counter) > \(lim) || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("pop:\(self.peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }
         }
@@ -88,7 +83,6 @@ class Generator {
     }
     
     private func setRandomPeople() {
-        self.body = self.body.sortFromFarestPair(hugging: false)
         let itrs = Swift.max(1, 4 - Swift.max(1, (body.count + 1) / 8))
         people = randomPeople(fromOrgans: body)
         for i in 1...itrs {
@@ -99,7 +93,6 @@ class Generator {
             print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
             people = tmp
         }
-        self.body = self.body.sortFromFarestPair(hugging: true)
     }
     
     private func randomPeople(fromOrgans: Body) -> People {
