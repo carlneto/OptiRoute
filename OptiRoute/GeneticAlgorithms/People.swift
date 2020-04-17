@@ -25,21 +25,24 @@ extension People {
         return currentGeneration
     }
     
-    mutating func fillWith(organs: Body) {
-        let twigs = [organs,
-                     organs.sortedFirst(),
-                     organs.sortedBoth(),
-                     organs.sorted(ascending: true, both: false),
-                     organs.sorted(ascending: true, both: true),
-                     organs.sorted(ascending: false, both: false),
-                     organs.sorted(ascending: false, both: true),
+    mutating func fillWith(body: Body) {
+        let twigs = [body,
+                     body.sortedFirst(),
+                     body.sortedLast(),
+                     body.sortedBoth()
         ]
-        for body in twigs {
-            append(Person(body: body))
-            for other in twigs {
-                guard other != body else { continue }
-                append(Person(body: body.mutate(withOther: other, probability: 0.68)))
-            }
+        for twig in twigs {
+            append(Person(body: twig))
+            fillSwap(body: twig)
+        }
+    }
+    
+    private mutating func fillSwap(body twig: Body) {
+        for swap in twig.swapWorst() {
+            append(Person(body: swap))
+            append(Person(body: swap.sortedFirst()))
+            append(Person(body: swap.sortedLast()))
+            append(Person(body: swap.sortedBoth()))
         }
     }
     

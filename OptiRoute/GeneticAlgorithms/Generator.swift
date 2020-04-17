@@ -17,7 +17,7 @@ class Generator {
     init(subject: Body) {
         body = subject
         let bodyCount = body.count
-        timeLimit = Swift.min(30.0, Double(bodyCount / 2))
+        timeLimit = Swift.min(50.0, Double(bodyCount / 2))
         peopleSize = Swift.min(512, 40 * bodyCount)
         if let maxSize = bodyCount.factorial, maxSize < peopleSize {
             peopleSize = maxSize
@@ -30,7 +30,7 @@ class Generator {
         benchTimer.restart()
         setRandomPeople()
         DispatchQueue.global().async {
-            let k = 9
+            let k = 12
             let barrier = k - 2
             var counter = k
             while self.evolving {
@@ -39,15 +39,13 @@ class Generator {
                 if let newBest = stats.vip {
                     if self.bestOne == nil {
                         self.bestOne = newBest
-                        nextGeneration.fillWith(organs: self.body)
-                    }
-                    if let best = self.bestOne, newBest.weight < best.weight {
+                        nextGeneration.fillWith(body: newBest.body)
+                    } else if let best = self.bestOne, newBest.weight < best.weight {
                         self.bestOne = newBest
-                        nextGeneration.fillWith(organs: newBest.body)
                         counter = k
                     } else {
                         if counter < barrier {
-                            nextGeneration.fillWith(organs: newBest.body)
+                            nextGeneration.fillWith(body: newBest.body)
                             let randomSize = Swift.min(self.peopleSize / 3, (barrier - counter) * self.peopleSize / 8)
                             nextGeneration += newBest.body.generatePeople(size: randomSize)
                         }
@@ -61,7 +59,7 @@ class Generator {
                     }
                 }
                 nextGeneration.removeDuplicates()
-                let mutationProb = Swift.max(pow(1.1, -0.44 * Double(self.generationCounter)), 0.015)
+                let mutationProb = Swift.max(pow(1.1, -0.44 * Double(counter + 2)), 0.015)
                 while nextGeneration.count < self.peopleSize {
                     if let child = stats.pop.child(mutation: mutationProb, weight: stats.weight) {
                         nextGeneration.append(child)
@@ -72,7 +70,7 @@ class Generator {
                 guard counter < 0 || self.benchTimer.elapsed > self.timeLimit else { continue }
                 self.stopEvolution()
                 guard let bestRoute = self.bestOne else { return }
-                print("pop:\(self.peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) || \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("pop:\(self.peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | @\(self.generationCounter) | \(self.benchTimer.elapsed.zeros(1)) > \(self.timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }
         }
@@ -83,16 +81,17 @@ class Generator {
     }
     
     private func setRandomPeople() {
-        let itrs = Swift.max(1, 4 - Swift.max(1, (body.count + 1) / 8))
+//        let itrs = Swift.max(1, 4 - Swift.max(1, (body.count + 1) / 8))
+//        let organs = body.sorted(ascending: false, both: false)
         people = randomPeople(fromOrgans: body)
-        for i in 1...itrs {
-            let tmp = randomPeople(fromOrgans: body)
-            let popTotalWeight = people.stats.weight
-            let tmpTotalWeight = tmp.stats.weight
-            guard tmpTotalWeight < popTotalWeight else { continue }
-            print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
-            people = tmp
-        }
+//        for i in 1...itrs {
+//            let tmp = randomPeople(fromOrgans: organs)
+//            let popTotalWeight = people.stats.weight
+//            let tmpTotalWeight = tmp.stats.weight
+//            guard tmpTotalWeight < popTotalWeight else { continue }
+//            print("i: \(i)\t\t\(Int(tmpTotalWeight)) <- \(Int(popTotalWeight))")
+//            people = tmp
+//        }
     }
     
     private func randomPeople(fromOrgans: Body) -> People {

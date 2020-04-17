@@ -136,8 +136,11 @@ class ViewController: UIViewController {
                         let a = vipBody[i % count]
                         let b = vipBody[(i + 1) % count]
                         //print("\(a.name)\t\t(\(a.muscleTo(other: b).zeros(0)))\t\t\(b.name)")
-                        if a.muscleTo(other: b) < 0.1 {
+                        if a.muscleTo(other: b) == 0 {
                             vipBody.rotate(offset: (i + 1) % count)
+                            if let first = vipBody.first, first.name == "0" {
+                                vipBody.reverse()
+                            }
                             break
                         }
                     }

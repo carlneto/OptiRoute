@@ -47,17 +47,38 @@ class Organ: Equatable, Hashable, Comparable {
         return contiguous
     }
     
-//    func neighbor(near: Int, in body: Body) -> Organ {
-//        guard body.count > 0, (0..<body.count) ~= near else { return self }
-//        var neighbors = [(muscle: Double, neighbor: Organ)]()
-//        for organ in body {
-//            let muscle = muscleTo(other: organ)
-//            let neighbor = (muscle: muscle, neighbor: organ)
-//            neighbors.append(neighbor)
-//        }
-//        neighbors.sort { $0.muscle < $1.muscle }
-//        return neighbors[near].neighbor
-//    }
+    func neighborIndex(body: Body) -> Int {
+        var contiguous = 0
+        var weight: Double?
+        for (idx, organ) in body.enumerated() {
+            guard organ != self else { continue }
+            let muscle = muscleTo(other: organ)
+            guard muscle > 0, let w = weight else {
+                contiguous = idx
+                weight = muscle
+                continue
+            }
+            if muscle < w {
+                contiguous = idx
+                weight = muscle
+            }
+        }
+        return contiguous
+    }
+    
+    func neighbors(body: Body) -> [(index: Int, neighbor: Organ, muscle: Double)] {
+        guard body.count > 0 else { return [] }
+        var neighbors = [(index: Int, neighbor: Organ, muscle: Double)]()
+        for (idx, organ) in body.enumerated() {
+            guard organ != self else { continue }
+            let muscle = muscleTo(other: organ)
+            guard muscle > 0 else { continue }
+            let neighbor = (idx, organ, muscle)
+            neighbors.append(neighbor)
+        }
+        neighbors.sort { $0.muscle < $1.muscle }
+        return neighbors
+    }
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
