@@ -1,6 +1,7 @@
 import UIKit
 
 protocol Fitness {
+    init(content: Any, isRound: Bool)
     func setWeights(isRound: Bool)
 }
 
@@ -47,37 +48,31 @@ class Organ: Equatable, Hashable, Comparable {
         return contiguous
     }
     
-    func neighborIndex(body: Body) -> Int {
-        var contiguous = 0
+    func circumjacent(body: Body, after level: Int) -> Int? {
+        let selfIdx = body.firstIndex(of: self) ?? 0
+        let tot = body.count
+        guard level > 0, level < tot else { return nil }
+        var idxs = [selfIdx]
+        for i in 1...level {
+            idxs.append((selfIdx + i) % tot)
+            idxs.append((((selfIdx - i) % tot) + tot) % tot)
+        }
+        var circumjacent: Int?
         var weight: Double?
         for (idx, organ) in body.enumerated() {
-            guard organ != self else { continue }
+            guard !idxs.contains(idx) else { continue }
             let muscle = muscleTo(other: organ)
-            guard muscle > 0, let w = weight else {
-                contiguous = idx
+            guard muscle > 0, let aWeight = weight else {
+                circumjacent = idx
                 weight = muscle
                 continue
             }
-            if muscle < w {
-                contiguous = idx
+            if muscle < aWeight {
+                circumjacent = idx
                 weight = muscle
             }
         }
-        return contiguous
-    }
-    
-    func neighbors(body: Body) -> [(index: Int, neighbor: Organ, muscle: Double)] {
-        guard body.count > 0 else { return [] }
-        var neighbors = [(index: Int, neighbor: Organ, muscle: Double)]()
-        for (idx, organ) in body.enumerated() {
-            guard organ != self else { continue }
-            let muscle = muscleTo(other: organ)
-            guard muscle > 0 else { continue }
-            let neighbor = (idx, organ, muscle)
-            neighbors.append(neighbor)
-        }
-        neighbors.sort { $0.muscle < $1.muscle }
-        return neighbors
+        return circumjacent
     }
     
     func hash(into hasher: inout Hasher) {
@@ -120,5 +115,13 @@ extension Body: Fitness {
         let organ = Organ.create(name: name, content: core)
         self.append(organ)
         return organ
+    }
+    
+    var str: String {
+        var ret = "["
+        for organ in self {
+            ret += " " + organ.str + ","
+        }
+        return ret + "]"
     }
 }

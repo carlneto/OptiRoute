@@ -125,3 +125,8 @@ extension Array {
     }
 }
 
+extension Bool {
+    static var arcRandom: Bool {
+        return arc4random() < arc4random()
+    }
+}

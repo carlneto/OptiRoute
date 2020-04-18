@@ -8,10 +8,6 @@ extension People {
         return self.reduce(0.0, { $0 + $1.weight })
     }
     
-    var vip: Person? {
-        return currentGeneration(totalWeight: totalWeight).first
-    }
-    
     var stats: (pop: People, weight: Double, vip: Person?) {
         let weight = totalWeight
         let actual = currentGeneration(totalWeight: weight)
@@ -38,11 +34,12 @@ extension People {
     }
     
     private mutating func fillSwap(body twig: Body) {
-        for swap in twig.swapWorst() {
-            append(Person(body: swap))
-            append(Person(body: swap.sortedFirst()))
-            append(Person(body: swap.sortedLast()))
-            append(Person(body: swap.sortedBoth()))
+        let cnt = twig.count / 2
+        for body1 in twig.swapAlone() {
+            append(Person(body: body1))
+            for surrounding in body1.swapSurroundings(turns: cnt) {
+                append(Person(body: surrounding))
+            }
         }
     }
     

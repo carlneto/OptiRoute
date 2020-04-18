@@ -119,7 +119,7 @@ class ViewController: UIViewController {
         sampleBtn.isEnabled = false
         
         let isRound = false
-        let body = Body.create(dict: locations, isRound: isRound)
+        let body = Body(content: locations, isRound: isRound)
         generator = Generator(subject: body)
         generator?.onNewGeneration = { (person, generation) in
             DispatchQueue.main.async {
@@ -198,22 +198,20 @@ class ViewController: UIViewController {
         }
         let wFactor = Double(mapView.bounds.width - 10)
         let hFactor = Double(mapView.bounds.height - 10)
-        for _ in 1 ... 9 {
+        for _ in 0 ... 9 {
             var p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
             while locationsContains(point: p)  {
                 p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
             }
             locations["\(locations.count)"] = p
         }
-        let p = CGPoint(x: Double.random(in: 10 ... wFactor), y:  Double.random(in: 10 ... hFactor))
-        locations["\(locations.count)"] = p
     }
     
     func locationsContains(point: CGPoint) -> Bool {
         for loc in locations {
             let p0 = loc.value
-            let h = hypot(Double(p0.x - point.x), Double(p0.y - point.y))
-            if h < 30 {
+            let hyp = hypot(Double(p0.x - point.x), Double(p0.y - point.y))
+            if hyp < 20 {
                 return true
             }
         }
@@ -269,39 +267,30 @@ class ViewController: UIViewController {
 
 extension Body {
     
-    static let aName = "0"
-    static let bName = "1"
-    static let cWeight = 0.0
-    
-    static func create(dict: [String : CGPoint], isRound: Bool) -> Body {
-        var body = Body()
-        for point in dict {
-            _ = body.inserted(name: "\(point.key)", content: point.value)
+    init(content: Any, isRound: Bool) {
+        self.init()
+        if let dict = content as? [String : CGPoint] {
+            for point in dict {
+                _ = inserted(name: "\(point.key)", content: point.value)
+            }
+            setWeights(isRound: isRound)
         }
-        body.setWeights(isRound: isRound)
-        return body
-    }
-    
-    static func create(points: [CGPoint], isRound: Bool) -> Body {
-        var body = Body()
-        for (idx, point) in points.enumerated() {
-            _ = body.inserted(name: "\(idx)", content: point)
-        }
-        body.setWeights(isRound: isRound)
-        return body
     }
     
     func setWeights(isRound: Bool) {
+        let aName = "0"
+        let bName = "1"
+        let cWeight = 0.0
         Organ.relaxMuscles()
         for o1 in self {
             for o2 in self {
                 if !isRound {
-                    if o1.name == Body.aName, o2.name == Body.bName {
-                        o1.set(weight: Body.cWeight, to: o2)
+                    if o1.name == aName, o2.name == bName {
+                        o1.set(weight: cWeight, to: o2)
                         continue
                     }
-                    if o1.name == Body.bName, o2.name == Body.aName {
-                        o1.set(weight: Body.cWeight, to: o2)
+                    if o1.name == bName, o2.name == aName {
+                        o1.set(weight: cWeight, to: o2)
                         continue
                     }
                 }
