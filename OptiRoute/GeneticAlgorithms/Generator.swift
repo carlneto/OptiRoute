@@ -21,10 +21,9 @@ class Generator {
             var people = self.randomPeople(fromOrgans: self.body, size: peopleSize)
             print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
             let buffer = 12
-            let barrier = buffer - 2
             var counter = buffer
             var genCount = 1
-            var fill = 0
+            var jump = 0
             var bestOne: Person?
             self.evolving = true
             while self.evolving {
@@ -33,16 +32,17 @@ class Generator {
                 if let newBest = stats.vip {
                     if bestOne == nil {
                         bestOne = newBest
-                        nextGeneration.fillWith(body: newBest.body)
+                        nextGeneration.initWith(body: newBest.body)
+                        nextGeneration.addFrom(people: stats.pop)
                     } else if let best = bestOne, newBest.weight < best.weight {
                         bestOne = newBest
                         counter = buffer
-                        fill = 0
+                        jump = 0
                     } else {
-                        fill += 1
-                        if counter > 0, fill > 2 {
-                            fill = 0
-                            nextGeneration.fillFrom(people: stats.pop)
+                        jump += 1
+                        if counter > 0, jump > 2 {
+                            jump = 0
+                            nextGeneration.addFrom(people: stats.pop)
                         }
                         let randomSize = Swift.min(peopleSize / 3, (buffer - counter + 1) * peopleSize / 8)
                         nextGeneration += newBest.body.generatePeople(size: randomSize)
@@ -56,14 +56,14 @@ class Generator {
                     }
                 }
                 nextGeneration.removeDuplicates()
-                let mutationProb = Swift.max(pow(1.1, -0.44 * Double(barrier - counter + 1)), 0.015)
+                let mutationProb = Swift.max(0.015, pow(1.1, 0.44 * Double(counter - buffer - 2)))
                 while nextGeneration.count < peopleSize {
                     if let child = stats.pop.child(mutation: mutationProb, weight: stats.weight) {
                         nextGeneration.append(child)
                     }
                 }
                 people = nextGeneration
-                print("\(counter)", terminator: " ")
+                //print("\(counter)", terminator: " ")
                 genCount += 1
                 guard counter < 0 || benchTimer.elapsed > timeLimit else { continue }
                 self.evolving = false

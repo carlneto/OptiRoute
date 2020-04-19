@@ -98,7 +98,7 @@ extension Body {
     }
     
     func sorted(ascending: Bool, both: Bool) -> Body {
-        guard let pair = pair(farest: !ascending) else { return self }
+        guard let pair = muscle(farest: !ascending) else { return self }
         let organs = sorted(from: pair.one, and: both ? pair.two : nil)
         return organs
     }
@@ -130,28 +130,32 @@ extension Body {
         return organs
     }
     
-    private func pair(farest: Bool) -> (one: Organ, two: Organ, muscle: Double)? {
-        var one: Organ?
-        var two: Organ?
-        var muscle: Double?
-        for o1 in self {
-            for o2 in self {
-                guard o1 != o2 else { continue }
-                let bond = o1.muscleTo(other: o2)
-                guard let saved = muscle else {
-                    one = o1
-                    two = o2
-                    muscle = bond
-                    continue
+    func uncrossed() -> [Body] {
+        var bodies = [Body]()
+        let edges = muscles()
+        let sorted = edges.sorted { $0.muscle > $1.muscle }
+        var limit = Int(Double(self.count) * 0.75)
+        for farest in sorted {
+            guard limit > 0 else { return bodies }
+            var body = self
+            var pairs = [(muscle: Muscle, flaccid: Double)]()
+            for edge in edges {
+                guard !farest.isRelated(to: edge) else { continue }
+                let ligament0 = farest.previous.muscleTo(other: edge.previous)
+                let ligament1 = farest.actual.muscleTo(other: edge.actual)
+                let ligament2 = farest.previous.muscleTo(other: edge.actual)
+                let ligament3 = farest.actual.muscleTo(other: edge.previous)
+                if Swift.min(ligament0, ligament1, ligament2, ligament3) > 0 {
+                    pairs.append((muscle: edge, flaccid: ligament0 + ligament1 + ligament2 + ligament3))
                 }
-                guard farest ? bond > saved : bond < saved else { continue }
-                one = o1
-                two = o2
-                muscle = bond
             }
+            pairs.sort { $0.flaccid < $1.flaccid }
+            guard let near = pairs.first else { return bodies }
+            body.reverse(between: farest.index - 1, and: near.muscle.index)
+            bodies.append(body)
+            limit -= 1
         }
-        guard let o1 = one, let o2 = two,  let brawn = muscle else { return nil }
-        return (one: o1, two: o2, muscle: brawn)
+        return bodies
     }
     
     func sortedSolos() -> [Body] {
@@ -160,9 +164,9 @@ extension Body {
         var bodies = [Body]()
         guard tot > 3 else { return bodies }
         let isolateds = body.alones()
-        let itrs = isolateds.count / 5
+        let itrs = Int(Double(isolateds.count) * 0.60)
         let isAloneRemoved = Bool.arcRandom
-        for i in 0 ..< itrs {//Swift.min(isolateds.count, 15) {
+        for i in 0 ..< itrs {
             let alone = isolateds[i]
             let itself = alone.itself
             let neighbors = itself.neighbors(body: body)
@@ -178,7 +182,6 @@ extension Body {
                 }
             }
             bodies.append(body)
-            //bodies.append(body.sorted(from: alone.prev))
         }
         return bodies
     }

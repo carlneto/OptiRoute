@@ -94,6 +94,36 @@ class Organ: Equatable, Hashable, Comparable {
     }
 }
 
+struct Muscle: Comparable {
+    
+    let index: Int
+    let previous: Organ
+    let muscle: Double
+    let actual: Organ
+    
+    func equalDirectionless(other: Muscle) -> Bool {
+        if actual == other.actual && previous == other.previous {
+            return true
+        }
+        return actual == other.previous && previous == other.actual
+    }
+    
+    func isRelated(to other: Muscle) -> Bool {
+        if actual == other.actual || actual == other.previous {
+            return true
+        }
+        return previous == other.actual || previous == other.previous
+    }
+    
+    var str: String {
+        return "(index: \(index), previous: \(previous.str), muscle: \(muscle.zeros(1)), actual: \(actual.str))"
+    }
+
+    static func < (lhs: Muscle, rhs: Muscle) -> Bool {
+        return lhs.muscle < rhs.muscle
+    }
+}
+
 typealias Body = [Organ]
 
 extension Body: Fitness {
@@ -102,6 +132,42 @@ extension Body: Fitness {
         let organ = Organ.create(name: name, content: core)
         self.append(organ)
         return organ
+    }
+    
+    func muscle(farest: Bool) -> (one: Organ, two: Organ, muscle: Double)? {
+        var one: Organ?
+        var two: Organ?
+        var muscle: Double?
+        for o1 in self {
+            for o2 in self {
+                guard o1 != o2 else { continue }
+                let bond = o1.muscleTo(other: o2)
+                guard let saved = muscle else {
+                    one = o1
+                    two = o2
+                    muscle = bond
+                    continue
+                }
+                guard farest ? bond > saved : bond < saved else { continue }
+                one = o1
+                two = o2
+                muscle = bond
+            }
+        }
+        guard let o1 = one, let o2 = two,  let brawn = muscle else { return nil }
+        return (one: o1, two: o2, muscle: brawn)
+    }
+    
+    func muscles() -> [Muscle] {
+        var result = [Muscle]()
+        var previous = last
+        for (idx, actual) in self.enumerated() {
+            if let previous = previous {
+                result.append(Muscle(index: idx, previous: previous, muscle: previous.muscleTo(other: actual), actual: actual))
+            }
+            previous = actual
+        }
+        return result
     }
     
     var str: String {

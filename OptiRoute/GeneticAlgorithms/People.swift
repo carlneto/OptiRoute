@@ -21,32 +21,24 @@ extension People {
         return currentGeneration
     }
     
-    mutating func fillFrom(people: People) {
-        var siblings = Swift.min(people.count, 4)
-        let part = Swift.max(2, people.count / 4 / siblings)
+    mutating func addFrom(people: People) {
+        var siblings = Swift.min(people.count, 3)
+        let part = Swift.max(2, people.count / 2 / siblings)
         for (idx, person) in people.enumerated() {
             guard siblings > 0 else { break }
             guard idx % part == 0 else { continue }
-            let twigs = [//person.body,
-                         person.body.sortedFirst(),
-                         person.body.sortedLast(),
-                         person.body.sortedBoth(),
-                         person.body.sorted(ascending: true, both: true),
-                         person.body.sorted(ascending: true, both: false),
-                         person.body.sorted(ascending: false, both: true),
-                         person.body.sorted(ascending: false, both: false)
-            ]
-            for twig in twigs {
-                append(Person(body: twig))
-            }
+            append(Person(body: person.body))
             for alone in person.body.sortedSolos() {
                 append(Person(body: alone))
+            }
+            for uncross in person.body.uncrossed() {
+                append(Person(body: uncross))
             }
             siblings -= 1
         }
     }
     
-    mutating func fillWith(body: Body) {
+    mutating func initWith(body: Body) {
         let twigs = [body,
                      body.sortedFirst(),
                      body.sortedLast(),
@@ -61,6 +53,12 @@ extension People {
         }
         for b in body.sortedEach() {
             append(Person(body: b))
+        }
+        for alone in body.sortedSolos() {
+            append(Person(body: alone))
+        }
+        for uncross in body.uncrossed() {
+            append(Person(body: uncross))
         }
     }
     
