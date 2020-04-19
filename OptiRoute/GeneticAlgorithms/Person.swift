@@ -87,6 +87,16 @@ extension Body {
         return sorted(from: first, and: last)
     }
     
+    func sortedEach() -> [Body] {
+        let body = self
+        var bodies = [Body]()
+        for organ in body {
+            bodies.append(body.sorted(from: organ))
+            bodies.append(body.reversed().sorted(from: organ))
+        }
+        return bodies
+    }
+    
     func sorted(ascending: Bool, both: Bool) -> Body {
         guard let pair = pair(farest: !ascending) else { return self }
         let organs = sorted(from: pair.one, and: both ? pair.two : nil)
@@ -120,59 +130,6 @@ extension Body {
         return organs
     }
     
-    func swapAlone() -> [Body] {
-        let tot = self.count
-        guard tot > 3 else { return [Body]() }
-        var body = self
-        var bodies = [Body]()
-        let lone = body.alone()
-        let aloneIdx = lone.index
-        let nextIdx = (aloneIdx + 1) % tot
-        let prevIdx = (aloneIdx - 1 + tot) % tot
-        func insertAt(idx0: Int, idx1: Int) {
-            body.swapAt(idx0, idx1)
-            bodies.append(body)
-            body.swapAt(idx1, idx0)
-        }
-        insertAt(idx0: aloneIdx, idx1: nextIdx)
-        insertAt(idx0: aloneIdx, idx1: prevIdx)
-        insertAt(idx0: prevIdx, idx1: nextIdx)
-        return bodies
-    }
-    
-    func swapSurroundings(turns: Int) -> [Body] {
-        let tot = self.count
-        var body = self
-        var bodies = [Body]()
-        for i in 1 ... turns {
-            let aloneIdx = body.alone().index
-            let level = i + 1
-            guard level < tot else { break }
-            if let secondIdx = body[aloneIdx].circumjacent(body: body, after: level) {
-                body.insert(body.remove(at: aloneIdx), at: secondIdx)
-                bodies.append(body)
-            }
-        }
-        return bodies
-    }
-    
-    private func alone() -> (index: Int, nearEdges: Double) {
-        var aloneIdx = 0
-        var nearEdges = 0.0
-        let tot = self.count
-        guard tot > 3 else { return (aloneIdx, nearEdges) }
-        var previousEdge = self[0].muscleTo(other: self[tot - 1])
-        for i in 0 ..< tot {
-            let nextEdge = self[i].muscleTo(other: self[(i + 1) % tot])
-            if nearEdges < previousEdge + nextEdge {
-                nearEdges = previousEdge + nextEdge
-                aloneIdx = i
-            }
-            previousEdge = nextEdge
-        }
-        return (aloneIdx, nearEdges)
-    }
-    
     private func pair(farest: Bool) -> (one: Organ, two: Organ, muscle: Double)? {
         var one: Organ?
         var two: Organ?
@@ -195,6 +152,54 @@ extension Body {
         }
         guard let o1 = one, let o2 = two,  let brawn = muscle else { return nil }
         return (one: o1, two: o2, muscle: brawn)
+    }
+    
+    func sortedSolos() -> [Body] {
+        var body = self
+        let tot = body.count
+        var bodies = [Body]()
+        guard tot > 3 else { return bodies }
+        let isolateds = body.alones()
+        let itrs = isolateds.count / 5
+        let isAloneRemoved = Bool.arcRandom
+        for i in 0 ..< itrs {//Swift.min(isolateds.count, 15) {
+            let alone = isolateds[i]
+            let itself = alone.itself
+            let neighbors = itself.neighbors(body: body)
+            for neighbor in neighbors {
+                let near = neighbor.organ
+                if near != alone.prev, near != alone.next, let nearIdx = body.firstIndex(of: near) {
+                    if isAloneRemoved {
+                        body.insert(body.remove(at: alone.index), at: nearIdx)
+                    } else {
+                        body.insert(body.remove(at: nearIdx), at: alone.index)
+                    }
+                    break
+                }
+            }
+            bodies.append(body)
+            //bodies.append(body.sorted(from: alone.prev))
+        }
+        return bodies
+    }
+    
+    private func alones() -> [(index: Int, prev: Organ, itself: Organ, next: Organ, nearEdges: Double)] {
+        var lones = [(index: Int, prev: Organ, itself: Organ, next: Organ, nearEdges: Double)]()
+        let tot = self.count
+        guard tot > 3 else { return [] }
+        var prevOrg = self[tot - 1]
+        var prevEdge = self[0].muscleTo(other: prevOrg)
+        for i in 0 ..< tot {
+            let nextIdx = (i + 1) % tot
+            let actualOrg = self[i]
+            let nextOrg = self[nextIdx]
+            let nextEdge = actualOrg.muscleTo(other: nextOrg)
+            lones.append((index: i, prev: prevOrg, itself: actualOrg, next: nextOrg, nearEdges: prevEdge + nextEdge))
+            prevOrg = actualOrg
+            prevEdge = nextEdge
+        }
+        lones.sort { $0.nearEdges > $1.nearEdges }
+        return lones
     }
     
     func mutate(withOther bodyTwo: Body, probability percentage: Double) -> Body {

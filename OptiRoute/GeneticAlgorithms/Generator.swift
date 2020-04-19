@@ -16,7 +16,7 @@ class Generator {
         DispatchQueue.global().async {
             let benchTimer = BenchTimer()
             let bodyCount = self.body.count
-            let timeLimit = Swift.min(50.0, Double(bodyCount / 2))
+            let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
             let peopleSize = Swift.min(512, 40 * bodyCount)
             var people = self.randomPeople(fromOrgans: self.body, size: peopleSize)
             print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
@@ -29,7 +29,7 @@ class Generator {
             self.evolving = true
             while self.evolving {
                 var nextGeneration = People()
-                let stats = people.stats
+                let stats = people.stats()
                 if let newBest = stats.vip {
                     if bestOne == nil {
                         bestOne = newBest
@@ -40,9 +40,9 @@ class Generator {
                         fill = 0
                     } else {
                         fill += 1
-                        if fill > 2, counter > 0 {
+                        if counter > 0, fill > 2 {
                             fill = 0
-                            nextGeneration.fillWith(body: newBest.body)
+                            nextGeneration.fillFrom(people: stats.pop)
                         }
                         let randomSize = Swift.min(peopleSize / 3, (buffer - counter + 1) * peopleSize / 8)
                         nextGeneration += newBest.body.generatePeople(size: randomSize)
@@ -63,11 +63,12 @@ class Generator {
                     }
                 }
                 people = nextGeneration
+                print("\(counter)", terminator: " ")
                 genCount += 1
                 guard counter < 0 || benchTimer.elapsed > timeLimit else { continue }
                 self.evolving = false
                 guard let bestRoute = bestOne else { return }
-                print("pop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | iters: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | iters: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }
         }

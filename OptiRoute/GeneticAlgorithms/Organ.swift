@@ -48,31 +48,18 @@ class Organ: Equatable, Hashable, Comparable {
         return contiguous
     }
     
-    func circumjacent(body: Body, after level: Int) -> Int? {
-        let selfIdx = body.firstIndex(of: self) ?? 0
-        let tot = body.count
-        guard level > 0, level < tot else { return nil }
-        var idxs = [selfIdx]
-        for i in 1...level {
-            idxs.append((selfIdx + i) % tot)
-            idxs.append((((selfIdx - i) % tot) + tot) % tot)
-        }
-        var circumjacent: Int?
-        var weight: Double?
+    func neighbors(body: Body) -> [(index: Int, organ: Organ, muscle: Double)] {
+        guard body.count > 0 else { return [] }
+        var neighbors = [(index: Int, organ: Organ, muscle: Double)]()
         for (idx, organ) in body.enumerated() {
-            guard !idxs.contains(idx) else { continue }
+            guard organ != self else { continue }
             let muscle = muscleTo(other: organ)
-            guard muscle > 0, let aWeight = weight else {
-                circumjacent = idx
-                weight = muscle
-                continue
-            }
-            if muscle < aWeight {
-                circumjacent = idx
-                weight = muscle
-            }
+            guard muscle > 0 else { continue }
+            let neighbor = (idx, organ, muscle)
+            neighbors.append(neighbor)
         }
-        return circumjacent
+        neighbors.sort { $0.muscle < $1.muscle }
+        return neighbors
     }
     
     func hash(into hasher: inout Hasher) {
