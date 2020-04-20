@@ -135,9 +135,9 @@ extension Body {
         let edges = muscles()
         let sorted = edges.sorted { $0.muscle > $1.muscle }
         var limit = Int(Double(self.count) * 0.75)
+        let isFirst = Bool.arcRandom && Bool.arcRandom
         for farest in sorted {
-            guard limit > 0 else { return bodies }
-            var body = self
+            guard limit > 0 else { break }
             var pairs = [(muscle: Muscle, flaccid: Double)]()
             for edge in edges {
                 guard !farest.isRelated(to: edge) else { continue }
@@ -150,8 +150,13 @@ extension Body {
                 }
             }
             pairs.sort { $0.flaccid < $1.flaccid }
-            guard let near = pairs.first else { return bodies }
-            body.reverse(between: farest.index - 1, and: near.muscle.index)
+            guard let near = pairs.first else { continue }
+            var body = self
+            if isFirst {
+                body.reverse(between: farest.index - 1, and: near.muscle.index)
+            } else {
+                body.reverse(between: farest.index, and: near.muscle.index - 1)
+            }
             bodies.append(body)
             limit -= 1
         }
@@ -164,7 +169,7 @@ extension Body {
         var bodies = [Body]()
         guard tot > 3 else { return bodies }
         let isolateds = body.alones()
-        let itrs = Int(Double(isolateds.count) * 0.60)
+        let itrs = Int(Double(isolateds.count) * 0.25)
         let isAloneRemoved = Bool.arcRandom
         for i in 0 ..< itrs {
             let alone = isolateds[i]

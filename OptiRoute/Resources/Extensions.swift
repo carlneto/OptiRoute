@@ -47,9 +47,10 @@ extension Array {
         }
     }
     mutating func reverse(between index1: Int, and index2: Int) {
-        let idx1 = Swift.min(index1, index2)
-        let idx2 = Swift.max(index1, index2)
-        guard idx1 >= 0, idx1 < idx2, idx2 < count else { return }
+        let i1 = ((index1 % count) + count) % count
+        let i2 = ((index2 % count) + count) % count
+        let idx1 = Swift.min(i1, i2)
+        let idx2 = Swift.max(i1, i2)
         let arr0 = self[0..<idx1]
         let arr1 = Array(self[idx1...idx2].reversed())
         let arr2 = self[(idx2 + 1)..<count]

@@ -21,23 +21,6 @@ extension People {
         return currentGeneration
     }
     
-    mutating func addFrom(people: People) {
-        var siblings = Swift.min(people.count, 3)
-        let part = Swift.max(2, people.count / 2 / siblings)
-        for (idx, person) in people.enumerated() {
-            guard siblings > 0 else { break }
-            guard idx % part == 0 else { continue }
-            append(Person(body: person.body))
-            for alone in person.body.sortedSolos() {
-                append(Person(body: alone))
-            }
-            for uncross in person.body.uncrossed() {
-                append(Person(body: uncross))
-            }
-            siblings -= 1
-        }
-    }
-    
     mutating func initWith(body: Body) {
         let twigs = [body,
                      body.sortedFirst(),
@@ -46,8 +29,7 @@ extension People {
                      body.sorted(ascending: true, both: true),
                      body.sorted(ascending: true, both: false),
                      body.sorted(ascending: false, both: true),
-                     body.sorted(ascending: false, both: false)
-        ]
+                     body.sorted(ascending: false, both: false)]
         for twig in twigs {
             append(Person(body: twig))
         }
@@ -59,6 +41,22 @@ extension People {
         }
         for uncross in body.uncrossed() {
             append(Person(body: uncross))
+        }
+    }
+    
+    mutating func addFrom(people: People) {
+        var siblings = Swift.min(people.count, 3)
+        let part = Swift.max(2, people.count / 2 / siblings)
+        for (idx, person) in people.enumerated() {
+            guard siblings > 0 else { break }
+            guard idx % part == 0 else { continue }
+            let body = person.body
+            append(Person(body: body))
+            let solos = body.sortedSolos()
+            for alone in solos { append(Person(body: alone)) }
+            let uncross =  body.uncrossed()
+            for uncross in uncross { append(Person(body: uncross)) }
+            siblings -= 1
         }
     }
     

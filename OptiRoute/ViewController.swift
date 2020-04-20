@@ -123,7 +123,7 @@ class ViewController: UIViewController {
         generator = Generator(subject: body)
         generator?.onNewGeneration = { (person, generation) in
             DispatchQueue.main.async {
-                self.generationLbl.text = "Generation: \(generation)"
+                self.generationLbl.text = "Fitness: \(generation)"
                 self.drawRoute(person.body)
             }
         }
@@ -145,7 +145,7 @@ class ViewController: UIViewController {
                         }
                     }
                 }
-                print(vipBody.str)
+                //print(vipBody.str)
                 self.generationLbl.text = "Finnish: \(person.weight.zeros(0))"
                 self.drawRoute(vipBody, isRound: isRound)
                 self.startBtn.isEnabled = true
