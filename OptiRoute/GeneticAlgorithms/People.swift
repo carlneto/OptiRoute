@@ -57,6 +57,7 @@ extension People {
     }
     
     /// People operators
+    
     private func elitistParent(with weightTotal: Double) -> Person? {
         let fitness = Double(arc4random()) / Double(UINT32_MAX)
         var currentFitness: Double = 0.0

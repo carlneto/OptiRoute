@@ -101,26 +101,19 @@ struct Muscle: Comparable {
     let muscle: Double
     let actual: Organ
     
-    func equalDirectionless(other: Muscle) -> Bool {
-        if actual == other.actual && previous == other.previous {
-            return true
-        }
-        return actual == other.previous && previous == other.actual
-    }
-    
     func isRelated(to other: Muscle) -> Bool {
         if actual == other.actual || actual == other.previous {
             return true
         }
         return previous == other.actual || previous == other.previous
     }
-    
-    var str: String {
-        return "(index: \(index), previous: \(previous.str), muscle: \(muscle.zeros(1)), actual: \(actual.str))"
-    }
 
     static func < (lhs: Muscle, rhs: Muscle) -> Bool {
         return lhs.muscle < rhs.muscle
+    }
+    
+    var str: String {
+        return "(index: \(index), previous: \(previous.str), muscle: \(muscle.zeros(1)), actual: \(actual.str))"
     }
 }
 
@@ -212,19 +205,19 @@ extension Body: Fitness {
         return arr
     }
     
-    var str: String {
-        var ret = "["
-        for organ in self {
-            ret += " " + organ.str + ","
-        }
-        return ret + "]"
-    }
-    
     var prt: String {
         var ret = "[\n"
         for (i, a) in self.enumerated() {
             let b = self[mod: self.modIndex(i + 1)]
             ret += "\(a.name)\t\t(\(a.muscleTo(other: b).zeros(1)))\t\t\(b.name)\n"
+        }
+        return ret + "]"
+    }
+    
+    var str: String {
+        var ret = "["
+        for organ in self {
+            ret += " " + organ.str + ","
         }
         return ret + "]"
     }

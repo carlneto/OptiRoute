@@ -60,16 +60,6 @@ extension Body {
         return result
     }
     
-    func generateBodies(size: Int) -> [Body] {
-        var result = Set<Body>()
-        if size > 0 {
-            while result.count < size {
-                result.insert(self.shuffle())
-            }
-        }
-        return result.compactMap { Body($0) }
-    }
-    
     /// Body operators
     
     func sortedFirst() ->  Body {
