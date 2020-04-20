@@ -124,6 +124,26 @@ struct Muscle: Comparable {
     }
 }
 
+struct Peak: Comparable {
+    
+    let index: Int
+    let prevOrgan: Organ
+    let organ: Organ
+    let nextOrgan: Organ
+    let prevEdge: Double
+    let nextEdge: Double
+    let oposEdge: Double
+    let percentage: Double
+    
+    var str: String {
+        return "(index: \(index), prevOrgan: \(prevOrgan.name), organ: \(organ.name), nextOrgan: \(nextOrgan.name), prevEdge: \(prevEdge.zeros(1)), nextEdge: \(nextEdge.zeros(1)), oposEdge: \(oposEdge.zeros(1)), percentage: \(percentage.zeros(3)))"
+    }
+    
+    static func < (lhs: Peak, rhs: Peak) -> Bool {
+        return lhs.percentage < rhs.percentage
+    }
+}
+
 typealias Body = [Organ]
 
 extension Body: Fitness {
@@ -162,18 +182,49 @@ extension Body: Fitness {
         var result = [Muscle]()
         var previous = last
         for (idx, actual) in self.enumerated() {
-            if let previous = previous {
-                result.append(Muscle(index: idx, previous: previous, muscle: previous.muscleTo(other: actual), actual: actual))
+            if let prev = previous {
+                let w = prev.muscleTo(other: actual)
+                result.append(Muscle(index: idx, previous: prev, muscle: w, actual: actual))
             }
             previous = actual
         }
         return result
     }
     
+    func peaks() -> [Peak] {
+        var arr = [Peak]()
+        let tot = self.count
+        let body = self
+        guard tot > 3 else { return [] }
+        for (idx, item) in body.enumerated() {
+            let prev = body[mod: idx - 1]
+            let next = body[mod: idx + 1]
+            let prevEdge = item.muscleTo(other: prev)
+            let nextEdge = item.muscleTo(other: next)
+            let oposEdge = prev.muscleTo(other: next)
+            let sharpen = 1 - oposEdge / (prevEdge + nextEdge)
+            let peak = Peak(index: idx,
+                            prevOrgan: prev, organ: item, nextOrgan: next,
+                            prevEdge: prevEdge, nextEdge: nextEdge, oposEdge: oposEdge,
+                            percentage: sharpen)
+            arr.append(peak)
+        }
+        return arr
+    }
+    
     var str: String {
         var ret = "["
         for organ in self {
             ret += " " + organ.str + ","
+        }
+        return ret + "]"
+    }
+    
+    var prt: String {
+        var ret = "[\n"
+        for (i, a) in self.enumerated() {
+            let b = self[mod: self.modIndex(i + 1)]
+            ret += "\(a.name)\t\t(\(a.muscleTo(other: b).zeros(1)))\t\t\(b.name)\n"
         }
         return ret + "]"
     }

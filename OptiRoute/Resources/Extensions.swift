@@ -8,19 +8,25 @@
 import UIKit
 
 extension Array {
-    
-    subscript(fixed index: Index) -> Element {
-        return self[fixed(index: index)]
+    subscript(mod index: Index) -> Element {
+        return self[modIndex(index)]
     }
-    
-    func fixed(index: Index) -> Index {
+    func modIndex(_ index: Index) -> Index {
         return ((index % count) + count) % count
     }
-    
     mutating func swapIndexes(i: Int, j: Int) {
-        swapAt(fixed(index: i), fixed(index: j))
+        swapAt(modIndex(i), modIndex(j))
     }
-    
+    mutating func move(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) {
+        let fromIdx = modIndex(sourceIndex)
+        let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
+        guard fromIdx != toIdx else { return }
+        guard abs(toIdx - fromIdx) != 1 else {
+            self.swapAt(fromIdx, toIdx)
+            return
+        }
+        self.insert(self.remove(at: fromIdx), at: fromIdx < toIdx ? toIdx - 1 : toIdx)
+    }
     func shuffle() -> [Element] {
         return sorted(by: { (_, _) -> Bool in
             return arc4random() < arc4random()

@@ -133,20 +133,20 @@ extension Body {
     func uncrossed() -> [Body] {
         var bodies = [Body]()
         let edges = muscles()
-        let sorted = edges.sorted { $0.muscle > $1.muscle }
-        var limit = Int(Double(self.count) * 0.75)
+        let farests = edges.sorted { $0.muscle > $1.muscle }
+        var limit = Int(Double(self.count) * 0.10)
         let isFirst = Bool.arcRandom && Bool.arcRandom
-        for farest in sorted {
+        for farest in farests {
             guard limit > 0 else { break }
             var pairs = [(muscle: Muscle, flaccid: Double)]()
             for edge in edges {
                 guard !farest.isRelated(to: edge) else { continue }
-                let ligament0 = farest.previous.muscleTo(other: edge.previous)
-                let ligament1 = farest.actual.muscleTo(other: edge.actual)
-                let ligament2 = farest.previous.muscleTo(other: edge.actual)
-                let ligament3 = farest.actual.muscleTo(other: edge.previous)
-                if Swift.min(ligament0, ligament1, ligament2, ligament3) > 0 {
-                    pairs.append((muscle: edge, flaccid: ligament0 + ligament1 + ligament2 + ligament3))
+                let lig0 = farest.previous.muscleTo(other: edge.previous)
+                let lig1 = farest.actual.muscleTo(other: edge.actual)
+                let lig2 = farest.previous.muscleTo(other: edge.actual)
+                let lig3 = farest.actual.muscleTo(other: edge.previous)
+                if Swift.min(lig0, lig1, lig2, lig3) > 0 {
+                    pairs.append((muscle: edge, flaccid: lig0 + lig1 + lig2 + lig3))
                 }
             }
             pairs.sort { $0.flaccid < $1.flaccid }
@@ -163,51 +163,25 @@ extension Body {
         return bodies
     }
     
-    func sortedSolos() -> [Body] {
-        var body = self
-        let tot = body.count
+    func smoothed() -> [Body] {
         var bodies = [Body]()
-        guard tot > 3 else { return bodies }
-        let isolateds = body.alones()
-        let itrs = Int(Double(isolateds.count) * 0.25)
-        let isAloneRemoved = Bool.arcRandom
-        for i in 0 ..< itrs {
-            let alone = isolateds[i]
-            let itself = alone.itself
-            let neighbors = itself.neighbors(body: body)
-            for neighbor in neighbors {
-                let near = neighbor.organ
-                if near != alone.prev, near != alone.next, let nearIdx = body.firstIndex(of: near) {
-                    if isAloneRemoved {
-                        body.insert(body.remove(at: alone.index), at: nearIdx)
-                    } else {
-                        body.insert(body.remove(at: nearIdx), at: alone.index)
-                    }
-                    break
-                }
-            }
+        guard self.count > 3 else { return bodies }
+        let peaks = self.peaks()
+        let sorted = peaks.sorted { $0.percentage > $1.percentage }
+        var limit = Swift.max(3, Int(Double(peaks.count) * 0.10))
+        for peak in sorted {
+            guard limit > 0 else { break }
+            var body = self, other = self
+            let neighbors = peak.organ.neighbors(body: body)
+            let first = neighbors.first { $0.organ != peak.prevOrgan && $0.organ != peak.nextOrgan && $0.muscle > 0 }
+            guard let neighbor = first else { continue }
+            other.move(from: peak.index, to: neighbor.index, before: false)
+            body.move(from: peak.index, to: neighbor.index, before: true)
+            bodies.append(other)
             bodies.append(body)
+            limit -= 1
         }
         return bodies
-    }
-    
-    private func alones() -> [(index: Int, prev: Organ, itself: Organ, next: Organ, nearEdges: Double)] {
-        var lones = [(index: Int, prev: Organ, itself: Organ, next: Organ, nearEdges: Double)]()
-        let tot = self.count
-        guard tot > 3 else { return [] }
-        var prevOrg = self[tot - 1]
-        var prevEdge = self[0].muscleTo(other: prevOrg)
-        for i in 0 ..< tot {
-            let nextIdx = (i + 1) % tot
-            let actualOrg = self[i]
-            let nextOrg = self[nextIdx]
-            let nextEdge = actualOrg.muscleTo(other: nextOrg)
-            lones.append((index: i, prev: prevOrg, itself: actualOrg, next: nextOrg, nearEdges: prevEdge + nextEdge))
-            prevOrg = actualOrg
-            prevEdge = nextEdge
-        }
-        lones.sort { $0.nearEdges > $1.nearEdges }
-        return lones
     }
     
     func mutate(withOther bodyTwo: Body, probability percentage: Double) -> Body {

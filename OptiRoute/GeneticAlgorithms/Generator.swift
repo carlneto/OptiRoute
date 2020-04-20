@@ -19,7 +19,7 @@ class Generator {
             let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
             let peopleSize = Swift.min(512, 40 * bodyCount)
             var people = self.randomPeople(fromOrgans: self.body, size: peopleSize)
-            //print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
+            print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
             let buffer = 12
             var counter = buffer, genCount = 1
             var bestOne: Person?
@@ -63,12 +63,12 @@ class Generator {
                     }
                 }
                 people = nextGeneration
-                //print("\(counter)", terminator: " ")
+                print("\(counter)", terminator: " ")
                 genCount += 1
                 guard counter < 0 || benchTimer.elapsed > timeLimit else { continue }
                 self.evolving = false
                 guard let bestRoute = bestOne else { return }
-                //print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | iters: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | iters: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
             }
         }

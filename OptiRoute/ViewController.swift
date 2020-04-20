@@ -145,7 +145,7 @@ class ViewController: UIViewController {
                         }
                     }
                 }
-                //print(vipBody.str)
+                print(vipBody.str)
                 self.generationLbl.text = "Finnish: \(person.weight.zeros(0))"
                 self.drawRoute(vipBody, isRound: isRound)
                 self.startBtn.isEnabled = true

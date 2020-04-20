@@ -30,18 +30,10 @@ extension People {
                      body.sorted(ascending: true, both: false),
                      body.sorted(ascending: false, both: true),
                      body.sorted(ascending: false, both: false)]
-        for twig in twigs {
-            append(Person(body: twig))
-        }
-        for b in body.sortedEach() {
-            append(Person(body: b))
-        }
-        for alone in body.sortedSolos() {
-            append(Person(body: alone))
-        }
-        for uncross in body.uncrossed() {
-            append(Person(body: uncross))
-        }
+        for twig in twigs { append(Person(body: twig)) }
+        for b in body.sortedEach() { append(Person(body: b)) }
+        for uncross in body.uncrossed() { append(Person(body: uncross)) }
+        for smooth in body.smoothed() { append(Person(body: smooth)) }
     }
     
     mutating func addFrom(people: People) {
@@ -52,10 +44,10 @@ extension People {
             guard idx % part == 0 else { continue }
             let body = person.body
             append(Person(body: body))
-            let solos = body.sortedSolos()
-            for alone in solos { append(Person(body: alone)) }
             let uncross =  body.uncrossed()
             for uncross in uncross { append(Person(body: uncross)) }
+            let smooths =  body.smoothed()
+            for smooth in smooths { append(Person(body: smooth)) }
             siblings -= 1
         }
     }
