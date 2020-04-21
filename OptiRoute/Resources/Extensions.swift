@@ -71,7 +71,6 @@ class BenchTimer {
     var elapsed: CFAbsoluteTime {
         return CFAbsoluteTimeGetCurrent() - startTime
     }
-    
     func restart() {
         startTime = CFAbsoluteTimeGetCurrent()
     }

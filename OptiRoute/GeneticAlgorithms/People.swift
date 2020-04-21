@@ -1,7 +1,6 @@
 import UIKit
 
 typealias People = [Person]
-
 extension People {
     
     var totalWeight: Double {
@@ -21,33 +20,39 @@ extension People {
         return currentGeneration
     }
     
-    mutating func initWith(body: Body) {
-        let twigs = [body,
-                     body.sortedFirst(),
-                     body.sortedLast(),
-                     body.sortedBoth(),
-                     body.sorted(ascending: true, both: true),
-                     body.sorted(ascending: true, both: false),
-                     body.sorted(ascending: false, both: true),
-                     body.sorted(ascending: false, both: false)]
-        for twig in twigs { append(Person(body: twig)) }
-        for b in body.sortedEach() { append(Person(body: b)) }
-        for uncross in body.uncrossed() { append(Person(body: uncross)) }
-        for smooth in body.smoothed() { append(Person(body: smooth)) }
+    mutating func initWith(body: Body, size: Int) {
+        var best: Body { return stats().vip?.body ?? body }
+        for sorted  in body.sortedAll() { append(Person(body: sorted))  }
+        for uncross in best.distorted() { append(Person(body: uncross)) }
+        for smooth  in best.flattened()  { append(Person(body: smooth))  }
+        let fitness = stats().weight
+        let part = size / 2
+        while count < part {
+            if let child = child(mutation: 0.68, weight: fitness) {
+                append(child)
+            }
+        }
     }
     
-    mutating func addFrom(people: People) {
+    mutating func addFrom(people: People, genCount: Int) {
         var siblings = Swift.min(people.count, 3)
         let part = Swift.max(2, people.count / 2 / siblings)
         for (idx, person) in people.enumerated() {
             guard siblings > 0 else { break }
             guard idx % part == 0 else { continue }
-            let body = person.body
-            append(Person(body: body))
-            let uncross =  body.uncrossed()
-            for uncross in uncross { append(Person(body: uncross)) }
-            let smooths =  body.smoothed()
-            for smooth in smooths { append(Person(body: smooth)) }
+            append(Person(body: person.body))
+            let body = genCount % 3 == 0 ? person.body : person.body.reversed()
+            if genCount % 7 == 1 {
+                for smooth in body.flattened(peaksRate: 0.10, neighborsCount: 3) { append(Person(body: smooth)) }
+            } else {
+                for uncross in body.distorted() { append(Person(body: uncross)) }
+            }
+//            for uncross in body.distorted(weakestRate: 0.05, nearsCount: 3) {
+//                //append(Person(body: uncross))
+//                for smooth in uncross.flattened(peaksRate: 0.02, neighborsCount: 1) {
+//                    append(Person(body: smooth))
+//                }
+//            }
             siblings -= 1
         }
     }

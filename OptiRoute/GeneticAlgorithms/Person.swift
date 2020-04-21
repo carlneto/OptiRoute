@@ -77,19 +77,20 @@ extension Body {
         return sorted(from: first, and: last)
     }
     
-    func sortedEach() -> [Body] {
-        let body = self
-        var bodies = [Body]()
-        for organ in body {
-            bodies.append(body.sorted(from: organ))
-            bodies.append(body.reversed().sorted(from: organ))
-        }
-        return bodies
+    func sortedAll() -> [Body] {
+        return [self,
+                sortedFirst(),
+                sortedLast(),
+                sortedBoth(),
+                sorted(fromCenter: true, both: true),
+                sorted(fromCenter: true, both: false),
+                sorted(fromCenter: false, both: true),
+                sorted(fromCenter: false, both: false)]
     }
     
-    func sorted(ascending: Bool, both: Bool) -> Body {
-        guard let pair = muscle(farest: !ascending) else { return self }
-        let organs = sorted(from: pair.one, and: both ? pair.two : nil)
+    func sorted(fromCenter: Bool, both: Bool) -> Body {
+        guard let pair = muscleUltra(farest: !fromCenter) else { return self }
+        let organs = sorted(from: pair.previous, and: both ? pair.actual : nil)
         return organs
     }
     
@@ -120,55 +121,48 @@ extension Body {
         return organs
     }
     
-    func uncrossed() -> [Body] {
+    func distorted(weakestRate: Double = 0.10, nearsCount: Int = 3) -> [Body] {
         var bodies = [Body]()
-        let edges = muscles()
-        let farests = edges.sorted { $0.muscle > $1.muscle }
-        var limit = Int(Double(self.count) * 0.10)
-        let isFirst = Bool.arcRandom && Bool.arcRandom
-        for farest in farests {
+        let muscles = self.muscles()
+        let weakests = muscles.weakests()
+        var limit = Swift.max(1, Int(Double(weakests.count) * weakestRate))
+        for weakest in weakests {
             guard limit > 0 else { break }
-            var pairs = [(muscle: Muscle, flaccid: Double)]()
-            for edge in edges {
-                guard !farest.isRelated(to: edge) else { continue }
-                let lig0 = farest.previous.muscleTo(other: edge.previous)
-                let lig1 = farest.actual.muscleTo(other: edge.actual)
-                let lig2 = farest.previous.muscleTo(other: edge.actual)
-                let lig3 = farest.actual.muscleTo(other: edge.previous)
-                if Swift.min(lig0, lig1, lig2, lig3) > 0 {
-                    pairs.append((muscle: edge, flaccid: lig0 + lig1 + lig2 + lig3))
-                }
+            let nears = muscles.glued(to: weakest)
+            var max = nearsCount
+            for near in nears {
+                guard max > 0 else { break }
+                var body1 = self, body2 = self
+                body1.reverse(between: weakest.index - 1, and: near.muscle.index)
+                body2.reverse(between: weakest.index, and: near.muscle.index - 1)
+                bodies.append(body1)
+                bodies.append(body2)
+                max -= 1
             }
-            pairs.sort { $0.flaccid < $1.flaccid }
-            guard let near = pairs.first else { continue }
-            var body = self
-            if isFirst {
-                body.reverse(between: farest.index - 1, and: near.muscle.index)
-            } else {
-                body.reverse(between: farest.index, and: near.muscle.index - 1)
-            }
-            bodies.append(body)
             limit -= 1
+            
         }
         return bodies
     }
     
-    func smoothed() -> [Body] {
+    func flattened(peaksRate: Double = 0.03, neighborsCount: Int = 3) -> [Body] {
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let peaks = self.peaks()
-        let sorted = peaks.sorted { $0.percentage > $1.percentage }
-        var limit = Swift.max(3, Int(Double(peaks.count) * 0.10))
-        for peak in sorted {
+        let peaks = self.peakests()
+        var limit = Swift.max(1, Int(Double(peaks.count) * peaksRate))
+        for peak in peaks {
             guard limit > 0 else { break }
-            var body = self, other = self
-            let neighbors = peak.organ.neighbors(body: body)
-            let first = neighbors.first { $0.organ != peak.prevOrgan && $0.organ != peak.nextOrgan && $0.muscle > 0 }
-            guard let neighbor = first else { continue }
-            other.move(from: peak.index, to: neighbor.index, before: false)
-            body.move(from: peak.index, to: neighbor.index, before: true)
-            bodies.append(other)
-            bodies.append(body)
+            let neighbors = peak.neighbors(body: self)
+            var max = neighborsCount
+            for neighbor in neighbors {
+                guard max > 0 else { break }
+                var body1 = self, body2 = self
+                body1.move(from: peak.index, to: neighbor.index, before: false)
+                body2.move(from: peak.index, to: neighbor.index, before: true)
+                bodies.append(body1)
+                bodies.append(body2)
+                max -= 1
+            }
             limit -= 1
         }
         return bodies

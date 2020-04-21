@@ -36,6 +36,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         resetLocations(arr: userLocations.keyForRead())
         "locations".keyToRemoveObject(sync: false)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+            self.startTap()
+        })
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -123,7 +126,7 @@ class ViewController: UIViewController {
         generator = Generator(subject: body)
         generator?.onNewGeneration = { (person, generation) in
             DispatchQueue.main.async {
-                self.generationLbl.text = "Fitness: \(generation)"
+                self.generationLbl.text = "\(generation)"
                 self.drawRoute(person.body)
             }
         }
@@ -145,8 +148,8 @@ class ViewController: UIViewController {
                         }
                     }
                 }
-                print(vipBody.str)
-                self.generationLbl.text = "Finnish: \(person.weight.zeros(0))"
+                //print(vipBody.str)
+                self.generationLbl.text = "Fitness: \(person.weight.zeros(0))"
                 self.drawRoute(vipBody, isRound: isRound)
                 self.startBtn.isEnabled = true
                 self.clearBtn.isEnabled = true
@@ -170,9 +173,17 @@ class ViewController: UIViewController {
     }
     
     @IBAction func clearTap() {
-        locations.removeAll()
-        mapView.layer.sublayers?.removeAll()
-        generationLbl.text = "Locations: \(locations.count)"
+        if let text = clearBtn.titleLabel?.text, text == "Sure?" {
+            clearBtn.setTitle("Clear", for: .normal)
+            locations.removeAll()
+            mapView.layer.sublayers?.removeAll()
+            generationLbl.text = "Locations: \(locations.count)"
+        } else {
+            clearBtn.setTitle("Sure?", for: .normal)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
+                self.clearBtn.setTitle("Clear", for: .normal)
+            })
+        }
     }
     
     @IBAction func sampleTap() {

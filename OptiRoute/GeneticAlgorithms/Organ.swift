@@ -5,9 +5,9 @@ protocol Fitness {
     func setWeights(isRound: Bool)
 }
 
-class Organ: Equatable, Hashable, Comparable {
+struct Organ: Equatable, Hashable, Comparable {
     
-    private static var muscles = [[String] : Double]()
+    private static var edges = [[String] : Double]()
     
     private static var body = [String : Organ]()
     
@@ -21,13 +21,13 @@ class Organ: Equatable, Hashable, Comparable {
     }
     
     func muscleTo(other: Organ) -> Double {
-        if let aWeight = Organ.muscles[[self.name, other.name]] { return aWeight }
-        fatalError("Muscle from: `\(name)` to `\(other.name)`,\n is not in muscle estruture:\n \(Organ.muscles).\n*See: `\(#function)`!")
+        if let aWeight = Organ.edges[[self.name, other.name]] { return aWeight }
+        fatalError("Muscle from: `\(name)` to `\(other.name)`,\n is not in muscle estruture:\n \(Organ.edges).\n*See: `\(#function)`!")
     }
     
     func set(weight: Double, to other: Organ) {
-        Organ.muscles[[self.name, other.name]] = weight
-        Organ.muscles[[other.name, self.name]] = weight
+        Organ.edges[[self.name, other.name]] = weight
+        Organ.edges[[other.name, self.name]] = weight
     }
     
     func neighbor(body: Body) -> Organ {
@@ -48,18 +48,18 @@ class Organ: Equatable, Hashable, Comparable {
         return contiguous
     }
     
-    func neighbors(body: Body) -> [(index: Int, organ: Organ, muscle: Double)] {
+    func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
         guard body.count > 0 else { return [] }
-        var neighbors = [(index: Int, organ: Organ, muscle: Double)]()
+        var arr = [(index: Int, organ: Organ, weakness: Double)]()
         for (idx, organ) in body.enumerated() {
             guard organ != self else { continue }
-            let muscle = muscleTo(other: organ)
-            guard muscle > 0 else { continue }
-            let neighbor = (idx, organ, muscle)
-            neighbors.append(neighbor)
+            let weakness = muscleTo(other: organ)
+            guard weakness > 0 else { continue }
+            let neighbor = (idx, organ, weakness)
+            arr.append(neighbor)
         }
-        neighbors.sort { $0.muscle < $1.muscle }
-        return neighbors
+        arr.sort { $0.weakness < $1.weakness }
+        return arr
     }
     
     func hash(into hasher: inout Hasher) {
@@ -71,7 +71,7 @@ class Organ: Equatable, Hashable, Comparable {
     }
     
     static func relaxMuscles() {
-        Organ.muscles = [[String] : Double]()
+        Organ.edges = [[String] : Double]()
     }
     
     static func == (lhs: Organ, rhs: Organ) -> Bool {
@@ -98,7 +98,7 @@ struct Muscle: Comparable {
     
     let index: Int
     let previous: Organ
-    let muscle: Double
+    let weakness: Double
     let actual: Organ
     
     func isRelated(to other: Muscle) -> Bool {
@@ -107,16 +107,44 @@ struct Muscle: Comparable {
         }
         return previous == other.actual || previous == other.previous
     }
-
+    
     static func < (lhs: Muscle, rhs: Muscle) -> Bool {
-        return lhs.muscle < rhs.muscle
+        return lhs.weakness < rhs.weakness
     }
     
     var str: String {
-        return "(index: \(index), previous: \(previous.str), muscle: \(muscle.zeros(1)), actual: \(actual.str))"
+        return "(index: \(index), previous: \(previous.str), weakness: \(weakness.zeros(1)), actual: \(actual.str))"
     }
 }
 
+typealias Muscles = [Muscle]
+extension Muscles {
+    
+    func ligaments(to muscle: Muscle) -> [(muscle: Muscle, flaccidity: Double)] {
+        var arr = [(muscle: Muscle, flaccidity: Double)]()
+        for edge in self {
+            guard !muscle.isRelated(to: edge) else { continue }
+            let lig0 = muscle.previous.muscleTo(other: edge.previous)
+            let lig1 = muscle.actual.muscleTo(other: edge.actual)
+            let lig2 = muscle.previous.muscleTo(other: edge.actual)
+            let lig3 = muscle.actual.muscleTo(other: edge.previous)
+            if Swift.min(lig0, lig1, lig2, lig3) > 0 {
+                arr.append((muscle: edge, flaccidity: lig0 + lig1 + lig2 + lig3))
+            }
+        }
+        return arr
+    }
+    
+    func glued(to muscle: Muscle) -> [(muscle: Muscle, flaccidity: Double)] {
+        return ligaments(to: muscle).sorted { $0.flaccidity < $1.flaccidity }
+    }
+    
+    func weakests() -> Muscles {
+        return sorted { $0.weakness > $1.weakness }
+    }
+}
+
+typealias Peaks = [Peak]
 struct Peak: Comparable {
     
     let index: Int
@@ -126,19 +154,23 @@ struct Peak: Comparable {
     let prevEdge: Double
     let nextEdge: Double
     let oposEdge: Double
-    let percentage: Double
+    let sharpening: Double
+    
+    func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
+        let neighbors = organ.neighbors(body: body)
+        return neighbors.filter { $0.organ != prevOrgan && $0.organ != nextOrgan && $0.weakness > 0 }
+    }
     
     var str: String {
-        return "(index: \(index), prevOrgan: \(prevOrgan.name), organ: \(organ.name), nextOrgan: \(nextOrgan.name), prevEdge: \(prevEdge.zeros(1)), nextEdge: \(nextEdge.zeros(1)), oposEdge: \(oposEdge.zeros(1)), percentage: \(percentage.zeros(3)))"
+        return "(index: \(index), prevOrgan: \(prevOrgan.name), organ: \(organ.name), nextOrgan: \(nextOrgan.name), prevEdge: \(prevEdge.zeros(1)), nextEdge: \(nextEdge.zeros(1)), oposEdge: \(oposEdge.zeros(1)), sharpening: \(sharpening.zeros(3)))"
     }
     
     static func < (lhs: Peak, rhs: Peak) -> Bool {
-        return lhs.percentage < rhs.percentage
+        return lhs.sharpening < rhs.sharpening
     }
 }
 
 typealias Body = [Organ]
-
 extension Body: Fitness {
     
     mutating func inserted(name: String, content core: Any) -> Organ {
@@ -147,45 +179,48 @@ extension Body: Fitness {
         return organ
     }
     
-    func muscle(farest: Bool) -> (one: Organ, two: Organ, muscle: Double)? {
+    func muscleUltra(farest: Bool) -> Muscle? {
         var one: Organ?
         var two: Organ?
-        var muscle: Double?
+        var index: Int?
+        var weakness: Double?
         for o1 in self {
-            for o2 in self {
+            for (idx2, o2) in self.enumerated() {
                 guard o1 != o2 else { continue }
                 let bond = o1.muscleTo(other: o2)
-                guard let saved = muscle else {
+                guard let saved = weakness else {
                     one = o1
                     two = o2
-                    muscle = bond
+                    index = idx2
+                    weakness = bond
                     continue
                 }
                 guard farest ? bond > saved : bond < saved else { continue }
                 one = o1
                 two = o2
-                muscle = bond
+                index = idx2
+                weakness = bond
             }
         }
-        guard let o1 = one, let o2 = two,  let brawn = muscle else { return nil }
-        return (one: o1, two: o2, muscle: brawn)
+        guard let i2 = index, let o1 = one, let o2 = two,  let flaccidity = weakness else { return nil }
+        return Muscle(index: i2, previous: o1, weakness: flaccidity, actual: o2)
     }
     
-    func muscles() -> [Muscle] {
-        var result = [Muscle]()
+    func muscles() -> Muscles {
+        var arr = Muscles()
         var previous = last
         for (idx, actual) in self.enumerated() {
             if let prev = previous {
                 let w = prev.muscleTo(other: actual)
-                result.append(Muscle(index: idx, previous: prev, muscle: w, actual: actual))
+                arr.append(Muscle(index: idx, previous: prev, weakness: w, actual: actual))
             }
             previous = actual
         }
-        return result
+        return arr
     }
     
-    func peaks() -> [Peak] {
-        var arr = [Peak]()
+    func peakests() -> Peaks {
+        var arr = Peaks()
         let tot = self.count
         let body = self
         guard tot > 3 else { return [] }
@@ -199,9 +234,10 @@ extension Body: Fitness {
             let peak = Peak(index: idx,
                             prevOrgan: prev, organ: item, nextOrgan: next,
                             prevEdge: prevEdge, nextEdge: nextEdge, oposEdge: oposEdge,
-                            percentage: sharpen)
+                            sharpening: sharpen)
             arr.append(peak)
         }
+        arr.sort { $0.sharpening > $1.sharpening }
         return arr
     }
     
