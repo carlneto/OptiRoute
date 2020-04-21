@@ -62,6 +62,17 @@ extension Body {
     
     /// Body operators
     
+    func sortedAll() -> [Body] {
+        return [self,
+                sortedFirst(),
+                sortedLast(),
+                sortedBoth(),
+                sorted(fromCenter: true, both: true),
+                sorted(fromCenter: true, both: false),
+                sorted(fromCenter: false, both: true),
+                sorted(fromCenter: false, both: false)]
+    }
+    
     func sortedFirst() ->  Body {
         guard let first = self.first else { return self }
         return sorted(from: first)
@@ -75,17 +86,6 @@ extension Body {
     func sortedBoth() ->  Body {
         guard let first = self.first, let last = self.last else { return self }
         return sorted(from: first, and: last)
-    }
-    
-    func sortedAll() -> [Body] {
-        return [self,
-                sortedFirst(),
-                sortedLast(),
-                sortedBoth(),
-                sorted(fromCenter: true, both: true),
-                sorted(fromCenter: true, both: false),
-                sorted(fromCenter: false, both: true),
-                sorted(fromCenter: false, both: false)]
     }
     
     func sorted(fromCenter: Bool, both: Bool) -> Body {
@@ -121,49 +121,41 @@ extension Body {
         return organs
     }
     
-    func distorted(weakestRate: Double = 0.10, nearsCount: Int = 3) -> [Body] {
+    func distorced(weakestRate: Double = 0.68, nearsMax: Int = 3) -> [Body] {
         var bodies = [Body]()
+        guard self.count > 3 else { return bodies }
+        let limit = Swift.max(2, Int(Double(self.count) * weakestRate))
         let muscles = self.muscles()
         let weakests = muscles.weakests()
-        var limit = Swift.max(1, Int(Double(weakests.count) * weakestRate))
         for weakest in weakests {
-            guard limit > 0 else { break }
+            guard bodies.count < limit else { break }
             let nears = muscles.glued(to: weakest)
-            var max = nearsCount
+            var maxNears = nearsMax
             for near in nears {
-                guard max > 0 else { break }
+                guard bodies.count < limit, maxNears > 0 else { break }
                 var body1 = self, body2 = self
                 body1.reverse(between: weakest.index - 1, and: near.muscle.index)
                 body2.reverse(between: weakest.index, and: near.muscle.index - 1)
                 bodies.append(body1)
                 bodies.append(body2)
-                max -= 1
+                maxNears -= 1
             }
-            limit -= 1
-            
         }
         return bodies
     }
     
-    func flattened(peaksRate: Double = 0.03, neighborsCount: Int = 3) -> [Body] {
+    func flattened(peaksRate: Double = 0.05, perPeak tries: Int = 2) -> [Body] {
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let peaks = self.peakests()
-        var limit = Swift.max(1, Int(Double(peaks.count) * peaksRate))
-        for peak in peaks {
-            guard limit > 0 else { break }
-            let neighbors = peak.neighbors(body: self)
-            var max = neighborsCount
-            for neighbor in neighbors {
-                guard max > 0 else { break }
-                var body1 = self, body2 = self
-                body1.move(from: peak.index, to: neighbor.index, before: false)
-                body2.move(from: peak.index, to: neighbor.index, before: true)
-                bodies.append(body1)
-                bodies.append(body2)
-                max -= 1
-            }
-            limit -= 1
+        let limit = Swift.max(2, Int(Double(self.count) * peaksRate))
+        let candidates = self.flatCandidates(perPeak: tries)
+        for candidate in candidates {
+            guard bodies.count < limit else { break }
+            var body1 = self, body2 = self
+            body1.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: false)
+            body2.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: true)
+            bodies.append(body1)
+            bodies.append(body2)
         }
         return bodies
     }

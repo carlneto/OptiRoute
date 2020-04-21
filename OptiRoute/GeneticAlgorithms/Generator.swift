@@ -28,11 +28,11 @@ class Generator {
                 let stats = people.stats()
                 var nextGeneration = People()
                 if let newBest = stats.vip {
-                    nextGeneration.addFrom(people: stats.pop, genCount: genCount)
-                    print("(\(nextGeneration.count)", terminator: ">")
-                    nextGeneration.removeDuplicates()
-                    print(nextGeneration.count, terminator: ") ")
-                    //print("(\(nextGeneration.count)", terminator: ") ")
+                    nextGeneration.addFrom(people: stats.pop)
+                    //print("(\(nextGeneration.count)", terminator: ">")
+                    //nextGeneration.removeDuplicates()
+                    //print(nextGeneration.count, terminator: ") ")
+                    //print("(\(nextGeneration.count))", terminator: " ")
                     if bestOne == nil {
                         bestOne = newBest
                     } else if let best = bestOne, newBest.weight < best.weight {
@@ -52,14 +52,14 @@ class Generator {
                     }
                 }
                 nextGeneration.removeDuplicates()
-                //print(nextGeneration.count, terminator: ") ")
-                var mutationProb = 0.68
+                let probInitial = 0.6
+                var mutationProb = probInitial
                 repeat {
                     if let child = stats.pop.child(mutation: mutationProb, weight: stats.weight) {
                         nextGeneration.append(child)
                     }
-                    if mutationProb == 0.68, nextGeneration.count >= peopleSize {
-                        mutationProb = 0.95
+                    if mutationProb == probInitial, nextGeneration.count >= peopleSize {
+                        mutationProb = 0.3
                         nextGeneration.removeDuplicates()
                     }
                 } while nextGeneration.count < peopleSize

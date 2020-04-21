@@ -55,8 +55,7 @@ struct Organ: Equatable, Hashable, Comparable {
             guard organ != self else { continue }
             let weakness = muscleTo(other: organ)
             guard weakness > 0 else { continue }
-            let neighbor = (idx, organ, weakness)
-            arr.append(neighbor)
+            arr.append((idx, organ, weakness))
         }
         arr.sort { $0.weakness < $1.weakness }
         return arr
@@ -120,8 +119,8 @@ struct Muscle: Comparable {
 typealias Muscles = [Muscle]
 extension Muscles {
     
-    func ligaments(to muscle: Muscle) -> [(muscle: Muscle, flaccidity: Double)] {
-        var arr = [(muscle: Muscle, flaccidity: Double)]()
+    func ligaments(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
+        var arr = [(muscle: Muscle, weight: Double)]()
         for edge in self {
             guard !muscle.isRelated(to: edge) else { continue }
             let lig0 = muscle.previous.muscleTo(other: edge.previous)
@@ -129,14 +128,14 @@ extension Muscles {
             let lig2 = muscle.previous.muscleTo(other: edge.actual)
             let lig3 = muscle.actual.muscleTo(other: edge.previous)
             if Swift.min(lig0, lig1, lig2, lig3) > 0 {
-                arr.append((muscle: edge, flaccidity: lig0 + lig1 + lig2 + lig3))
+                arr.append((muscle: edge, weight: lig0 + lig1 + lig2 + lig3))
             }
         }
         return arr
     }
     
-    func glued(to muscle: Muscle) -> [(muscle: Muscle, flaccidity: Double)] {
-        return ligaments(to: muscle).sorted { $0.flaccidity < $1.flaccidity }
+    func glued(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
+        return ligaments(to: muscle).sorted { $0.weight < $1.weight }
     }
     
     func weakests() -> Muscles {
@@ -157,8 +156,10 @@ struct Peak: Comparable {
     let sharpening: Double
     
     func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
-        let neighbors = organ.neighbors(body: body)
-        return neighbors.filter { $0.organ != prevOrgan && $0.organ != nextOrgan && $0.weakness > 0 }
+        var neighbors = organ.neighbors(body: body)
+        neighbors = neighbors.filter { $0.organ != prevOrgan && $0.organ != nextOrgan && $0.weakness > 0 }
+        neighbors.sort { $0.weakness < $1.weakness }
+        return neighbors
     }
     
     var str: String {
@@ -231,6 +232,7 @@ extension Body: Fitness {
             let nextEdge = item.muscleTo(other: next)
             let oposEdge = prev.muscleTo(other: next)
             let sharpen = 1 - oposEdge / (prevEdge + nextEdge)
+            guard 0...1 ~= sharpen else { continue }
             let peak = Peak(index: idx,
                             prevOrgan: prev, organ: item, nextOrgan: next,
                             prevEdge: prevEdge, nextEdge: nextEdge, oposEdge: oposEdge,
@@ -239,6 +241,32 @@ extension Body: Fitness {
         }
         arr.sort { $0.sharpening > $1.sharpening }
         return arr
+    }
+    
+    func flatCandidates(perPeak tries: Int) -> [(peakIdx: Int, neigborIdx: Int, costRate: Double)] {
+        let peaks = self.peakests()
+        var candidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
+        for peak in peaks {
+            guard peak.prevEdge > 0, peak.nextEdge > 0, peak.oposEdge > 0 else { continue }
+            let actualCost = peak.prevEdge + peak.nextEdge
+            let neighbors = peak.neighbors(body: self)
+            var neibhborCandidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
+            for neighbor in neighbors {
+                guard neighbor.weakness > 0 else { continue }
+                let newCost = peak.oposEdge + neighbor.weakness * 1.5
+                guard newCost < actualCost else { continue }
+                let costRate = newCost / actualCost
+                let candidate = (peakIdx: peak.index, neigborIdx: neighbor.index, costRate: costRate)
+                neibhborCandidates.append(candidate)
+            }
+            neibhborCandidates.sort { $0.costRate < $1.costRate }
+            for (i, neibhborCandidate) in neibhborCandidates.enumerated() {
+                guard i < tries else { break }
+                candidates.append(neibhborCandidate)
+            }
+        }
+        candidates.sort { $0.costRate < $1.costRate }
+        return candidates
     }
     
     var prt: String {
