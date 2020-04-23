@@ -17,10 +17,10 @@ class Generator {
             let benchTimer = BenchTimer()
             let bodyCount = self.body.count
             let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
-            let peopleSize = Swift.min(512, 40 * bodyCount)
-            var people = self.randomPeople(fromOrgans: self.body, size: peopleSize)
+            let peopleSize = Swift.min(512, 6 * bodyCount)
             print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
-            let buffer = 3
+            var people = People(from: self.body, size: peopleSize)
+            let buffer = 2
             var counter = buffer, genCount = 1
             var bestOne: Person?
             self.evolving = true
@@ -28,7 +28,7 @@ class Generator {
                 let stats = people.stats()
                 var nextGeneration = People()
                 if let newBest = stats.vip {
-                    nextGeneration.addFrom(people: stats.pop)
+                    nextGeneration.addSpecial(people: stats.pop, vip: newBest, isLast: counter == 0)
                     //print("(\(nextGeneration.count)", terminator: ">")
                     //nextGeneration.removeDuplicates()
                     //print(nextGeneration.count, terminator: ") ")
@@ -38,31 +38,15 @@ class Generator {
                     } else if let best = bestOne, newBest.weight < best.weight {
                         bestOne = newBest
                         counter = buffer
+                        self.onNewGeneration?(newBest, Int(newBest.weight + 0.5))
                     } else {
-                        let randomSize = Swift.min(peopleSize / 3, (buffer - counter + 1) * peopleSize / 8)
-                        nextGeneration += newBest.body.generatePeople(size: randomSize)
+                        let nPersons = Swift.min(peopleSize / 3, (buffer - counter + 1) * peopleSize / 8)
+                        nextGeneration.addRandom(vip: newBest, size: nPersons, isLast: counter == 0)
                         counter -= 1
                     }
-                    let aBest = bestOne ?? newBest
-                    self.onNewGeneration?(aBest, Int(aBest.weight + 0.5))
                 }
-                for _ in 0 ..< peopleSize / 4 {
-                    if let roulette = stats.pop.roulette {
-                        nextGeneration.append(roulette.person)
-                    }
-                }
-                nextGeneration.removeDuplicates()
-                let probInitial = 0.6
-                var mutationProb = probInitial
-                repeat {
-                    if let child = stats.pop.child(mutation: mutationProb, weight: stats.weight) {
-                        nextGeneration.append(child)
-                    }
-                    if mutationProb == probInitial, nextGeneration.count >= peopleSize {
-                        mutationProb = 0.3
-                        nextGeneration.removeDuplicates()
-                    }
-                } while nextGeneration.count < peopleSize
+                nextGeneration.addRoulette(people: stats.pop, size: peopleSize / 4, isLast: counter == -1)
+                nextGeneration.addChildren(statistics: stats, size: peopleSize, isLast: counter == -1)
                 people = nextGeneration
                 print("\(counter)", terminator: " ")
                 genCount += 1
@@ -77,14 +61,5 @@ class Generator {
     
     func stopEvolution() {
         evolving = false
-    }
-    
-    private func randomPeople(fromOrgans: Body, size: Int) -> People {
-        var result = People()
-        result.initWith(body: fromOrgans, size: size)
-        while result.count < size {
-            result.append(Person(body: fromOrgans.shuffle()))
-        }
-        return result
     }
 }

@@ -74,6 +74,10 @@ class BenchTimer {
     func restart() {
         startTime = CFAbsoluteTimeGetCurrent()
     }
+    func prt(restart: Bool = true, zeros: Int = 4, msg: String = "t:") {
+        print("\(msg)\(elapsed.zeros(zeros))")
+        if restart { startTime = CFAbsoluteTimeGetCurrent() }
+    }
 }
 
 extension Bool {

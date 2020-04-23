@@ -124,14 +124,14 @@ class ViewController: UIViewController {
         let isRound = false
         let body = Body(content: locations, isRound: isRound)
         generator = Generator(subject: body)
-        generator?.onNewGeneration = { (person, generation) in
+        generator?.onNewGeneration = { (person, weight) in
             DispatchQueue.main.async {
-                self.generationLbl.text = "\(generation)"
+                self.generationLbl.text = "\(weight)"
                 self.drawRoute(person.body)
             }
         }
-        generator?.onEvolutionEnd = { (person, generation) in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
+        generator?.onEvolutionEnd = { (person, weight) in
+            DispatchQueue.main.async {
                 var vipBody = person.body
                 if !isRound {
                     let count = vipBody.count
@@ -155,7 +155,7 @@ class ViewController: UIViewController {
                 self.clearBtn.isEnabled = true
                 self.undoBtn.isEnabled = true
                 self.sampleBtn.isEnabled = true
-            })
+            }
         }
         generator?.startEvolution()
     }
@@ -173,15 +173,16 @@ class ViewController: UIViewController {
     }
     
     @IBAction func clearTap() {
-        if let text = clearBtn.titleLabel?.text, text == "Sure?" {
-            clearBtn.setTitle("Clear", for: .normal)
+        let txt = "Clear", ok = "Ok?"
+        if let text = clearBtn.titleLabel?.text, text == ok {
+            clearBtn.setTitle(txt, for: .normal)
             locations.removeAll()
             mapView.layer.sublayers?.removeAll()
             generationLbl.text = "Locations: \(locations.count)"
         } else {
-            clearBtn.setTitle("Sure?", for: .normal)
+            clearBtn.setTitle(ok, for: .normal)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5, execute: {
-                self.clearBtn.setTitle("Clear", for: .normal)
+                self.clearBtn.setTitle(txt, for: .normal)
             })
         }
     }

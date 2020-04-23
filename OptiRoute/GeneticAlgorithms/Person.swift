@@ -121,10 +121,13 @@ extension Body {
         return organs
     }
     
-    func distorced(weakestRate: Double = 0.68, nearsMax: Int = 3) -> [Body] {
+    func uncrossed(maximum: Double = 0.68, nearsMax: Int = 3) -> [Body] {
+        //let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * weakestRate))
+        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        var indexes = Set<Int>()
+        var body1 = self, body2 = self
         let muscles = self.muscles()
         let weakests = muscles.weakests()
         for weakest in weakests {
@@ -133,7 +136,12 @@ extension Body {
             var maxNears = nearsMax
             for near in nears {
                 guard bodies.count < limit, maxNears > 0 else { break }
-                var body1 = self, body2 = self
+                if !indexes.insert(weakest.index - 1).inserted || !indexes.insert(near.muscle.index).inserted ||
+                    !indexes.insert(weakest.index).inserted || !indexes.insert(near.muscle.index - 1).inserted {
+                    indexes = Set<Int>()
+                    body1 = self
+                    body2 = self
+                }
                 body1.reverse(between: weakest.index - 1, and: near.muscle.index)
                 body2.reverse(between: weakest.index, and: near.muscle.index - 1)
                 bodies.append(body1)
@@ -141,22 +149,53 @@ extension Body {
                 maxNears -= 1
             }
         }
+        //print("\nu\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
-    func flattened(peaksRate: Double = 0.05, perPeak tries: Int = 2) -> [Body] {
+    func flattened(maximum: Double = 0.50, perPeak tries: Int = 10) -> [Body] {
+        //let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * peaksRate))
+        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        var indexes = Set<Int>()
+        var body1 = self, body2 = self
         let candidates = self.flatCandidates(perPeak: tries)
         for candidate in candidates {
             guard bodies.count < limit else { break }
-            var body1 = self, body2 = self
+            if !indexes.insert(candidate.peakIdx).inserted || !indexes.insert(candidate.neigborIdx).inserted ||
+                !indexes.insert(candidate.neigborIdx - 1).inserted {
+                body1 = self
+                body2 = self
+                indexes = Set<Int>()
+            }
             body1.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: false)
             body2.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: true)
             bodies.append(body1)
             bodies.append(body2)
         }
+        //print("\nf\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
+        return bodies
+    }
+    
+    func swapForwards(maximum: Double = 0.68) -> [Body] {
+        //let t = BenchTimer()
+        var bodies = [Body]()
+        guard self.count > 3 else { return bodies }
+        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        var indexes = Set<Int>()
+        var body = self
+        let stepsBack = self.stepsBack()
+        for stepBack in stepsBack {
+            guard bodies.count < limit else { break }
+            if !indexes.insert(stepBack.index + 1).inserted || !indexes.insert(stepBack.index).inserted {
+                indexes = Set<Int>()
+                body = self
+            }
+            body.swapIndexes(i: stepBack.index, j: stepBack.index + 1)
+            bodies.append(body)
+        }
+        //print("\ns\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
