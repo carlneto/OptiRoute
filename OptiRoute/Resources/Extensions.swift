@@ -17,6 +17,10 @@ extension Array {
     mutating func swapIndexes(i: Int, j: Int) {
         swapAt(modIndex(i), modIndex(j))
     }
+    mutating func insert(item: Element, at destinationIndex: Int, before: Bool = true) {
+        let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
+        self.insert(item, at: toIdx)
+    }
     mutating func move(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) {
         let fromIdx = modIndex(sourceIndex)
         let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
@@ -26,6 +30,19 @@ extension Array {
             return
         }
         self.insert(self.remove(at: fromIdx), at: fromIdx < toIdx ? toIdx - 1 : toIdx)
+    }
+    mutating func reversed(between index1: Int, and index2: Int) {
+        self = self.reverse(between: index1, and: index2)
+    }
+    func reverse(between index1: Int, and index2: Int) -> Array {
+        let i1 = ((index1 % count) + count) % count
+        let i2 = ((index2 % count) + count) % count
+        let idx1 = Swift.min(i1, i2)
+        let idx2 = Swift.max(i1, i2)
+        let arr0 = self[0..<idx1]
+        let arr1 = Array(self[idx1...idx2].reversed())
+        let arr2 = self[(idx2 + 1)..<count]
+        return arr0 + arr1 + arr2
     }
     func shuffle() -> [Element] {
         return sorted(by: { (_, _) -> Bool in
@@ -51,16 +68,6 @@ extension Array {
         return stride(from: 0, to: count, by: size).map {
             Array(self[$0 ..< Swift.min($0 + size, count)])
         }
-    }
-    mutating func reverse(between index1: Int, and index2: Int) {
-        let i1 = ((index1 % count) + count) % count
-        let i2 = ((index2 % count) + count) % count
-        let idx1 = Swift.min(i1, i2)
-        let idx2 = Swift.max(i1, i2)
-        let arr0 = self[0..<idx1]
-        let arr1 = Array(self[idx1...idx2].reversed())
-        let arr2 = self[(idx2 + 1)..<count]
-        self = arr0 + arr1 + arr2
     }
 }
 

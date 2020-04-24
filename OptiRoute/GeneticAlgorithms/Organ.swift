@@ -8,8 +8,7 @@ protocol Fitness {
 struct Organ: Equatable, Hashable, Comparable {
     
     private static var edges = [[String] : Double]()
-    
-    private static var body = [String : Organ]()
+    private static var uniqueBody = [String : Organ]()
     
     private (set) var name: String
     
@@ -82,7 +81,7 @@ struct Organ: Equatable, Hashable, Comparable {
     
     fileprivate static func create(name: String, content: Any) -> Organ {
         if !name.isEmpty {
-            if let organ = Organ.body[name] {
+            if let organ = Organ.uniqueBody[name] {
                 return organ
             }
             return Organ(name: name, core: content)
@@ -118,7 +117,7 @@ struct Muscle: Comparable {
 typealias Muscles = [Muscle]
 extension Muscles {
     
-    func ligaments(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
+    func nears(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
         var arr = [(muscle: Muscle, weight: Double)]()
         for edge in self {
             guard !muscle.isRelated(to: edge) else { continue }
@@ -130,11 +129,7 @@ extension Muscles {
                 arr.append((muscle: edge, weight: lig0 + lig1 + lig2 + lig3))
             }
         }
-        return arr
-    }
-    
-    func glued(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
-        return ligaments(to: muscle).sorted { $0.weight < $1.weight }
+        return arr.sorted { $0.weight < $1.weight }
     }
     
     func weakests() -> Muscles {
@@ -153,6 +148,16 @@ struct Peak: Comparable {
     let nextEdge: Double
     let oposEdge: Double
     let sharpening: Double
+    
+    func index(in body: Body) -> Int? {
+        let peakName = currOrgan.name
+        for i in 0 ..< body.count {
+            if peakName == body[i].name {
+                return i
+            }
+        }
+        return nil
+    }
     
     func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
         var neighbors = currOrgan.neighbors(body: body)
@@ -177,6 +182,15 @@ extension Body: Fitness {
         let organ = Organ.create(name: name, content: core)
         self.append(organ)
         return organ
+    }
+    
+    mutating func removed(organName: String) -> Organ? {
+        for i in 0 ..< count {
+            if self[i].name == organName {
+                return self.remove(at: i)
+            }
+        }
+        return nil
     }
     
     func muscleUltra(farest: Bool) -> Muscle? {
@@ -223,19 +237,24 @@ extension Body: Fitness {
         var arr = Peaks()
         let tot = self.count
         let body = self
+        let bodyAverage = body.average()
         guard tot > 3 else { return [] }
         for (idx, curr) in body.enumerated() {
             let prev = body[mod: idx - 1]
             let next = body[mod: idx + 1]
-            let prevEdge = prev.muscleTo(other: curr)
-            let nextEdge = curr.muscleTo(other: next)
-            let oposEdge = prev.muscleTo(other: next)
-            guard prevEdge > 0, nextEdge > 0, oposEdge > 0 else { continue }
-            let sharpen = 1 - oposEdge / (prevEdge + nextEdge)
+//            if curr.name == "63" {
+//                print("a\(prev.name)b\(curr.name)c\(next.name)", terminator: " ")
+//            }
+            let ab = prev.muscleTo(other: curr)
+            let bc = curr.muscleTo(other: next)
+            let ac = prev.muscleTo(other: next)
+            let abc = ab + bc, doubleAverage = 2 * bodyAverage
+            guard ab > 0, bc > 0, ac > 0, abc > doubleAverage else { continue }
+            let sharpen = 1 - doubleAverage / abc
             guard 0...1 ~= sharpen else { continue }
             let peak = Peak(index: idx,
                             prevOrgan: prev, currOrgan: curr, nextOrgan: next,
-                            prevEdge: prevEdge, nextEdge: nextEdge, oposEdge: oposEdge,
+                            prevEdge: ab, nextEdge: bc, oposEdge: ac,
                             sharpening: sharpen)
             arr.append(peak)
         }

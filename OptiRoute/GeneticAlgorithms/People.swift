@@ -31,33 +31,34 @@ extension People {
     mutating func initWith(body: Body, size: Int) {
         var best: Body { return stats().vip?.body ?? body }
         for sorted in body.sortedAll() { append(Person(body: sorted)) }
-        for uncross in best.uncrossed() { append(Person(body: uncross)) }
-        for stepForward in best.swapForwards() { append(Person(body: stepForward)) }
-        for stepForward in best.reversed().swapForwards() { append(Person(body: stepForward)) }
-        for flatten in best.flattened() { append(Person(body: flatten)) }
-        for flatten in best.reversed().flattened() { append(Person(body: flatten)) }
+        for flatted in best.flatted(maximum: maxCount) { append(Person(body: flatted)) }
+        for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
+        for swapForward in best.swapForwards(maximum: maxCount) { append(Person(body: swapForward)) }
+        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
+        for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
         let fitness = stats().weight
-        let part = size / 2
-        while count < part {
+        while count < size / 2 {
             if let child = child(mutation: 0.68, weight: fitness) {
                 append(child)
             }
         }
+        //print("\ninitWith: \(count)")
     }
+    
+    var maxCount: Double { return 0.25 }
+    var tries: Int { return 8 }
     
     mutating func addSpecial(people: People, vip: Person, isLast: Bool) {
         guard !isLast else { return }
-        for i in 1...2 {
+        for _ in 1 ... 2 {
             var best: Body {
-                if i % 2 == 1 {
-                    return self.stats().vip?.body ?? vip.body
-                } else {
-                    return (self.stats().vip?.body ?? vip.body).reversed()
-                }
+                return self.stats().vip?.body ?? vip.body
             }
-            for uncross in best.uncrossed() { append(Person(body: uncross)) }
-            for stepForward in best.swapForwards() { append(Person(body: stepForward)) }
-            for flatten in best.flattened() { append(Person(body: flatten)) }
+            for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
+            for swapForward in best.swapForwards(maximum: maxCount) { append(Person(body: swapForward)) }
+            for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
+            for flatted in best.flatted(maximum: maxCount) { append(Person(body: flatted)) }
+            for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
         }
     }
     
