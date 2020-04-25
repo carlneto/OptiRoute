@@ -35,6 +35,7 @@ class Generator {
                     //print("(\(nextGeneration.count))", terminator: " ")
                     if bestOne == nil {
                         bestOne = newBest
+                        self.onNewGeneration?(newBest, Int(newBest.weight + 0.5))
                     } else if let best = bestOne, newBest.weight < best.weight {
                         bestOne = newBest
                         counter = buffer

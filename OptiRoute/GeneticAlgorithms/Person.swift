@@ -66,7 +66,7 @@ extension Body {
     
     /// Body operators
     
-    func sortedAll() -> [Body] {
+    func sort() -> [Body] {
         return [self,
                 sortedFirst(),
                 sortedLast(),
@@ -125,18 +125,66 @@ extension Body {
         return organs
     }
     
+    func collected() -> [Body] {
+        //return []
+        //let t = BenchTimer()
+        var bodies = [Body]()
+        let tot = self.count
+        guard tot > 3 else { return bodies }
+        let weaknessMax = self.average()
+        var candidates = [(from: String, to: String, gain: Double)]()
+        var body = self
+        for (i, a) in body.enumerated() {
+            let c = body[mod: i]
+            let ac = a.muscleTo(other: c)
+            let ab_s = a.neighbors(body: body, maxWeakness: weaknessMax)
+            var neighborName = ""
+            var gainWeight = Double(Int.max)
+            for ab in ab_s {
+                let b = ab.organ
+                guard b != c else { continue }
+                let bc = b.muscleTo(other: c)
+                let a2 = body[mod: ab.index - 1], b2 = b, c2 = body[mod: ab.index + 1]
+                let ab2 = a2.muscleTo(other: b2), bc2 = b2.muscleTo(other: c2), ac2 = a2.muscleTo(other: c2)
+                let oldCost = ac + ab2 + bc2
+                let newCost = ab.weakness + bc + ac2
+                guard newCost < oldCost else { continue }
+                let aWeight = newCost - oldCost
+                guard aWeight < gainWeight else { continue }
+                gainWeight = aWeight
+                neighborName = ab.organ.name
+            }
+            candidates.append((from: neighborName, to: c.name, gain: gainWeight))
+        }
+        guard !candidates.isEmpty else { return bodies }
+        candidates.sort { $0.gain < $1.gain }
+        var names = Set<String>()
+        for candidate in candidates {
+            if !names.insert(candidate.from).inserted || !names.insert(candidate.to).inserted {
+                continue
+            }
+            guard let fromIdx = body.index(of: candidate.from),
+                let toIdx = body.index(of: candidate.to) else { continue }
+            body.move(from: fromIdx, to: toIdx, before: true)
+            guard body.count == self.count else { break }
+            bodies.append(body)
+        }
+        //print("\nf\(bodies.count) \((body.calculateWeight() - self.calculateWeight()).zeros(0)) t\(t.elapsed.zeros(3))", terminator: " ")
+        return bodies
+    }
+    
     func uncrossed(maximum: Double, nearsMax: Int) -> [Body] {
         //return []
         //let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        let limit = Swift.max(2, Int(Double(self.count) * maximum * 6))
         let muscles = self.muscles()
         let weakests = muscles.weakests()
         for weakest in weakests {
             guard bodies.count < limit else { break }
             let nears = muscles.nears(to: weakest)
-            var maxNears = nearsMax
+            var maxNears = nearsMax * 2
             for near in nears {
                 guard bodies.count < limit, maxNears > 0 else { break }
                 var body1 = self, body2 = self
@@ -150,7 +198,7 @@ extension Body {
         //print("\na\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
-    
+
     func flattened(maximum: Double, perPeak tries: Int) -> [Body] {
         //return []
         //let t = BenchTimer()
@@ -159,8 +207,7 @@ extension Body {
         let limit = Swift.max(2, Int(Double(self.count) * maximum))
         var indexes = Set<Int>()
         var body1 = self, body2 = self
-        let candidates = self.flatCandidates(perPeak: tries)
-        for candidate in candidates {
+        for candidate in self.flatCandidates(perPeak: tries) {
             guard bodies.count < limit else { break }
             if !indexes.insert(candidate.peakIdx).inserted || !indexes.insert(candidate.neigborIdx).inserted ||
                 !indexes.insert(candidate.neigborIdx - 1).inserted {
@@ -174,66 +221,6 @@ extension Body {
             bodies.append(body2)
         }
         //print("\nb\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
-        return bodies
-    }
-    
-    func swapForwards(maximum: Double) -> [Body] {
-        //return []
-        //let t = BenchTimer()
-        var bodies = [Body]()
-        guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum))
-        var indexes = Set<Int>()
-        var body = self
-        let stepsBack = self.stepsBack()
-        for stepBack in stepsBack {
-            guard bodies.count < limit else { break }
-            if !indexes.insert(stepBack.index + 1).inserted || !indexes.insert(stepBack.index).inserted {
-                indexes = Set<Int>()
-                body = self
-            }
-            body.swapIndexes(i: stepBack.index, j: stepBack.index + 1)
-            bodies.append(body)
-        }
-        //print("\nc\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
-        return bodies
-    }
-    
-    func flatted(maximum: Double) -> [Body] {
-        //return []
-        //let t = BenchTimer()
-        var bodies = [Body]()
-        guard self.count > 4 else { return bodies }
-        let limit = Swift.max(1, Int(Double(self.count) * maximum))
-        let selfWeight = self.calculateWeight()
-        var body = self
-        for _ in 0 ..< limit {
-            let peaks = body.peakests()
-            var organs = [Organ]()
-            for peak in peaks {
-                guard organs.count < limit else { break }
-                guard let removed = body.removed(organName: peak.currOrgan.name) else { continue }
-                organs.append(removed)
-            }
-            for b in organs {
-                var idx = 0
-                var cost = Double(Int.max)
-                for i in 0 ..< body.count {
-                    let a = body[mod: i], c = body[mod: i + 1]
-                    let ab = a.muscleTo(other: b), bc = b.muscleTo(other: c)
-                    let new = ab + bc
-                    if new < cost {
-                        cost = new
-                        idx = i
-                    }
-                }
-                body.insert(item: b, at: idx, before: false)
-            }
-            guard body.count == self.count else { break }
-            guard body.calculateWeight() < selfWeight else { continue }
-            bodies.append(body)
-        }
-        //print("\nd\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
@@ -251,10 +238,9 @@ extension Body {
             let ac = a.muscleTo(other: c), cb = c.muscleTo(other: b), bd = b.muscleTo(other: d)
             guard Swift.min(ab, bc, cd, ac, cb, bc, bd) >= 0 else { continue }
             let old = ab + bc + cd, new = ac + cb + bd
-            if old > new {
+            if new < old {
                 body.swapIndexes(i: i + 1, j: i + 2)
                 guard body.count == self.count else { break }
-                //guard body.calculateWeight() < selfWeight else { continue }
                 bodies.append(body)
             }
         }

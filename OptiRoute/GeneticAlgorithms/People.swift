@@ -29,13 +29,19 @@ extension People {
     }
     
     mutating func initWith(body: Body, size: Int) {
-        var best: Body { return stats().vip?.body ?? body }
-        for sorted in body.sortedAll() { append(Person(body: sorted)) }
-        for flatted in best.flatted(maximum: maxCount) { append(Person(body: flatted)) }
-        for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
-        for swapForward in best.swapForwards(maximum: maxCount) { append(Person(body: swapForward)) }
-        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
+        var best: Body {
+            let newStats = self.stats()
+            if let newVip = newStats.vip?.body {
+                //print("\nv\(newStats.weight.zeros(0))", terminator: " ")
+                return newVip
+            }
+            return body
+        }
+        for sorted in body.sort() { append(Person(body: sorted)) }
+        for collected in best.collected() { append(Person(body: collected)) }
         for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
+        for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
+        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
         let fitness = stats().weight
         while count < size / 2 {
             if let child = child(mutation: 0.68, weight: fitness) {
@@ -45,21 +51,24 @@ extension People {
         //print("\ninitWith: \(count)")
     }
     
-    var maxCount: Double { return 0.25 }
+    var maxCount: Double { return 0.33 }
     var tries: Int { return 8 }
     
     mutating func addSpecial(people: People, vip: Person, isLast: Bool) {
         guard !isLast else { return }
-        for _ in 1 ... 2 {
+//        for _ in 1 ... 2 {
             var best: Body {
-                return self.stats().vip?.body ?? vip.body
+                let newStats = self.stats()
+                if let newVip = newStats.vip?.body {
+                    //print("\nv\(newStats.weight.zeros(0))", terminator: " ")
+                    return newVip
+                }
+                return vip.body
             }
-            for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
-            for swapForward in best.swapForwards(maximum: maxCount) { append(Person(body: swapForward)) }
             for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
-            for flatted in best.flatted(maximum: maxCount) { append(Person(body: flatted)) }
+            for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
             for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
-        }
+//        }
     }
     
     mutating func addRandom(vip: Person, size: Int, isLast: Bool) {

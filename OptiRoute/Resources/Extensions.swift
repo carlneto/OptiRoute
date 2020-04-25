@@ -31,6 +31,11 @@ extension Array {
         }
         self.insert(self.remove(at: fromIdx), at: fromIdx < toIdx ? toIdx - 1 : toIdx)
     }
+    func moved(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) -> Array {
+        var copy = self
+        copy.move(from: sourceIndex, to: destinationIndex, before: before)
+        return copy
+    }
     mutating func reversed(between index1: Int, and index2: Int) {
         self = self.reverse(between: index1, and: index2)
     }
@@ -68,6 +73,20 @@ extension Array {
         return stride(from: 0, to: count, by: size).map {
             Array(self[$0 ..< Swift.min($0 + size, count)])
         }
+    }
+}
+
+extension Array where Element: FloatingPoint {
+    func sum() -> Element {
+        return self.reduce(0, +)
+    }
+    func avg() -> Element {
+        return self.sum() / Element(self.count)
+    }
+    func std() -> Element {
+        let mean = self.avg()
+        let v = self.reduce(0, { $0 + ($1 - mean) * ($1 - mean) })
+        return sqrt(v / (Element(self.count) - 1))
     }
 }
 
@@ -170,4 +189,14 @@ extension String {
         label.sizeToFit()
         return label.frame.width
     }
+}
+
+func triangleHeight(left: Double, base: Double, right: Double) -> Double {
+    let s = (left + base + right) / 2
+    let a = (s * (s - left) * (s - base) * (s - right)).squareRoot()
+    return 2 * a / base
+}
+
+func triangleOpposite(hypotenuse: Double, adjacent: Double) -> Double {
+    return (pow(hypotenuse, 2) - pow(adjacent, 2)).squareRoot()
 }

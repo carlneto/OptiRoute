@@ -59,6 +59,19 @@ struct Organ: Equatable, Hashable, Comparable {
         return arr
     }
     
+    func neighbors(body: Body, maxWeakness: Double) -> [(index: Int, organ: Organ, weakness: Double)] {
+        guard body.count > 0 else { return [] }
+        var arr = [(index: Int, organ: Organ, weakness: Double)]()
+        for (idx, organ) in body.enumerated() {
+            guard organ != self else { continue }
+            let weakness = self.muscleTo(other: organ)
+            guard weakness > 0, weakness <= maxWeakness else { continue }
+            arr.append((idx, organ, weakness))
+        }
+        arr.sort { $0.weakness < $1.weakness }
+        return arr
+    }
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
@@ -121,10 +134,10 @@ extension Muscles {
         var arr = [(muscle: Muscle, weight: Double)]()
         for edge in self {
             guard !muscle.isRelated(to: edge) else { continue }
-            let lig0 = muscle.previous.muscleTo(other: edge.previous)
-            let lig1 = muscle.actual.muscleTo(other: edge.actual)
-            let lig2 = muscle.previous.muscleTo(other: edge.actual)
-            let lig3 = muscle.actual.muscleTo(other: edge.previous)
+            let lig0 = edge.previous.muscleTo(other: muscle.previous)
+            let lig1 = edge.actual.muscleTo(other: muscle.actual)
+            let lig2 = edge.previous.muscleTo(other: muscle.actual)
+            let lig3 = edge.actual.muscleTo(other: muscle.previous)
             if Swift.min(lig0, lig1, lig2, lig3) > 0 {
                 arr.append((muscle: edge, weight: lig0 + lig1 + lig2 + lig3))
             }
@@ -159,9 +172,9 @@ struct Peak: Comparable {
         return nil
     }
     
-    func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
-        var neighbors = currOrgan.neighbors(body: body)
-        neighbors = neighbors.filter { $0.organ != prevOrgan && $0.organ != nextOrgan && $0.weakness > 0 }
+    func neighbors(body: Body, maximum: Double) -> [(index: Int, organ: Organ, weakness: Double)] {
+        var neighbors = currOrgan.neighbors(body: body, maxWeakness: maximum)
+        neighbors = neighbors.filter { $0.organ != prevOrgan && $0.organ != nextOrgan }
         neighbors.sort { $0.weakness < $1.weakness }
         return neighbors
     }
@@ -177,6 +190,15 @@ struct Peak: Comparable {
 
 typealias Body = [Organ]
 extension Body: Fitness {
+    
+    func index(of organName: String) -> Int? {
+        for i in 0 ..< count {
+            if self[i].name == organName {
+                return i
+            }
+        }
+        return nil
+    }
     
     mutating func inserted(name: String, content core: Any) -> Organ {
         let organ = Organ.create(name: name, content: core)
@@ -233,6 +255,17 @@ extension Body: Fitness {
         return arr
     }
     
+    func std() -> Double {
+        var arr = [Double]()
+        var previous = last
+        for actual in self {
+            if let prev = previous { arr.append(prev.muscleTo(other: actual)) }
+            previous = actual
+        }
+        let standardDeviation = arr.std()
+        return standardDeviation
+    }
+    
     func peakests() -> Peaks {
         var arr = Peaks()
         let tot = self.count
@@ -242,9 +275,6 @@ extension Body: Fitness {
         for (idx, curr) in body.enumerated() {
             let prev = body[mod: idx - 1]
             let next = body[mod: idx + 1]
-//            if curr.name == "63" {
-//                print("a\(prev.name)b\(curr.name)c\(next.name)", terminator: " ")
-//            }
             let ab = prev.muscleTo(other: curr)
             let bc = curr.muscleTo(other: next)
             let ac = prev.muscleTo(other: next)
@@ -268,9 +298,8 @@ extension Body: Fitness {
         for peak in peaks {
             guard peak.prevEdge > 0, peak.nextEdge > 0, peak.oposEdge > 0 else { continue }
             let actualCost = peak.prevEdge + peak.nextEdge
-            let neighbors = peak.neighbors(body: self)
             var neibhborCandidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
-            for neighbor in neighbors {
+            for neighbor in peak.neighbors(body: self, maximum: self.average()) {
                 guard neighbor.weakness > 0 else { continue }
                 let newCost = peak.oposEdge + neighbor.weakness
                 guard newCost < actualCost else { continue }
