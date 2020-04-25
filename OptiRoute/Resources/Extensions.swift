@@ -191,7 +191,10 @@ extension String {
     }
 }
 
-func triangleHeight(left: Double, base: Double, right: Double) -> Double {
+func triangleHeight(left: Double, base: Double, right: Double) -> Double? {
+    guard base < left + right else { return nil }
+    guard left < base + right else { return nil }
+    guard right < left + base else { return nil }
     let s = (left + base + right) / 2
     let a = (s * (s - left) * (s - base) * (s - right)).squareRoot()
     return 2 * a / base

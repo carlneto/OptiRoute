@@ -39,16 +39,16 @@ extension People {
         }
         for sorted in body.sort() { append(Person(body: sorted)) }
         for collected in best.collected() { append(Person(body: collected)) }
+        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
         for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
         for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
-        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
         let fitness = stats().weight
         while count < size / 2 {
             if let child = child(mutation: 0.68, weight: fitness) {
                 append(child)
             }
         }
-        //print("\ninitWith: \(count)")
+        print("\ninitWith: \(count)")
     }
     
     var maxCount: Double { return 0.33 }
@@ -56,19 +56,16 @@ extension People {
     
     mutating func addSpecial(people: People, vip: Person, isLast: Bool) {
         guard !isLast else { return }
-//        for _ in 1 ... 2 {
-            var best: Body {
-                let newStats = self.stats()
-                if let newVip = newStats.vip?.body {
-                    //print("\nv\(newStats.weight.zeros(0))", terminator: " ")
-                    return newVip
-                }
-                return vip.body
+        var best: Body {
+            let newStats = self.stats()
+            if let newVip = newStats.vip?.body {//print("\nv\(newStats.weight.zeros(0))", terminator: " ")
+                return newVip
             }
-            for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
-            for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
-            for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
-//        }
+            return vip.body
+        }
+        for flatten in best.flattened(maximum: maxCount, perPeak: tries) { append(Person(body: flatten)) }
+        for straighted in best.straighted(maximum: maxCount) { append(Person(body: straighted)) }
+        for uncross in best.uncrossed(maximum: maxCount, nearsMax: tries) { append(Person(body: uncross)) }
     }
     
     mutating func addRandom(vip: Person, size: Int, isLast: Bool) {

@@ -133,14 +133,14 @@ extension Muscles {
     func nears(to muscle: Muscle) -> [(muscle: Muscle, weight: Double)] {
         var arr = [(muscle: Muscle, weight: Double)]()
         for edge in self {
-            guard !muscle.isRelated(to: edge) else { continue }
+            guard Swift.min(edge.weakness, muscle.weakness) > 0,
+                !muscle.isRelated(to: edge) else { continue }
             let lig0 = edge.previous.muscleTo(other: muscle.previous)
             let lig1 = edge.actual.muscleTo(other: muscle.actual)
             let lig2 = edge.previous.muscleTo(other: muscle.actual)
             let lig3 = edge.actual.muscleTo(other: muscle.previous)
-            if Swift.min(lig0, lig1, lig2, lig3) > 0 {
-                arr.append((muscle: edge, weight: lig0 + lig1 + lig2 + lig3))
-            }
+            guard Swift.min(lig0, lig1, lig2, lig3) > 0 else { continue }
+            arr.append((muscle: edge, weight: lig0 + lig1 + lig2 + lig3))
         }
         return arr.sorted { $0.weight < $1.weight }
     }
@@ -161,16 +161,6 @@ struct Peak: Comparable {
     let nextEdge: Double
     let oposEdge: Double
     let sharpening: Double
-    
-    func index(in body: Body) -> Int? {
-        let peakName = currOrgan.name
-        for i in 0 ..< body.count {
-            if peakName == body[i].name {
-                return i
-            }
-        }
-        return nil
-    }
     
     func neighbors(body: Body, maximum: Double) -> [(index: Int, organ: Organ, weakness: Double)] {
         var neighbors = currOrgan.neighbors(body: body, maxWeakness: maximum)
@@ -206,15 +196,6 @@ extension Body: Fitness {
         return organ
     }
     
-    mutating func removed(organName: String) -> Organ? {
-        for i in 0 ..< count {
-            if self[i].name == organName {
-                return self.remove(at: i)
-            }
-        }
-        return nil
-    }
-    
     func muscleUltra(farest: Bool) -> Muscle? {
         var one: Organ?
         var two: Organ?
@@ -244,11 +225,12 @@ extension Body: Fitness {
     
     func muscles() -> Muscles {
         var arr = Muscles()
+        guard self.count > 1 else { return arr }
         var previous = last
-        for (idx, actual) in self.enumerated() {
+        for (i, actual) in self.enumerated() {
             if let prev = previous {
                 let w = prev.muscleTo(other: actual)
-                arr.append(Muscle(index: idx, previous: prev, weakness: w, actual: actual))
+                arr.append(Muscle(index: i, previous: prev, weakness: w, actual: actual))
             }
             previous = actual
         }
@@ -269,9 +251,9 @@ extension Body: Fitness {
     func peakests() -> Peaks {
         var arr = Peaks()
         let tot = self.count
+        guard tot > 3 else { return arr }
         let body = self
         let bodyAverage = body.average()
-        guard tot > 3 else { return [] }
         for (idx, curr) in body.enumerated() {
             let prev = body[mod: idx - 1]
             let next = body[mod: idx + 1]
@@ -293,8 +275,8 @@ extension Body: Fitness {
     }
     
     func flatCandidates(perPeak tries: Int) -> [(peakIdx: Int, neigborIdx: Int, costRate: Double)] {
-        let peaks = self.peakests()
         var candidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
+        let peaks = self.peakests()
         for peak in peaks {
             guard peak.prevEdge > 0, peak.nextEdge > 0, peak.oposEdge > 0 else { continue }
             let actualCost = peak.prevEdge + peak.nextEdge
@@ -316,30 +298,6 @@ extension Body: Fitness {
         }
         candidates.sort { $0.costRate < $1.costRate }
         return candidates
-    }
-    
-    func stepsBack() -> Peaks {
-        var arr = Peaks()
-        let tot = self.count
-        let body = self
-        guard tot > 3 else { return [] }
-        for (idx, curr) in body.enumerated() {
-            let prev = body[mod: idx - 1]
-            let next = body[mod: idx + 1]
-            let prevEdge = prev.muscleTo(other: curr)
-            let nextEdge = curr.muscleTo(other: next)
-            let oposEdge = prev.muscleTo(other: next)
-            guard prevEdge > 0, nextEdge > 0, oposEdge > 0 else { continue }
-            let sharpen = prevEdge / (oposEdge + nextEdge)
-            guard 0...1 ~= sharpen else { continue }
-            let peak = Peak(index: idx,
-                            prevOrgan: prev, currOrgan: curr, nextOrgan: next,
-                            prevEdge: prevEdge, nextEdge: nextEdge, oposEdge: oposEdge,
-                            sharpening: sharpen)
-            arr.append(peak)
-        }
-        arr.sort { $0.sharpening < $1.sharpening }
-        return arr
     }
     
     var prt: String {

@@ -178,7 +178,7 @@ extension Body {
         //let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum * 6))
+        let limit = Swift.max(2, Int(Double(self.count) * maximum * 5))
         let muscles = self.muscles()
         let weakests = muscles.weakests()
         for weakest in weakests {
