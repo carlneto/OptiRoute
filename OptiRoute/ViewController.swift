@@ -55,15 +55,15 @@ class ViewController: UIViewController {
         self.locations.forEach { location in
             let p = location.value
             let idx = location.key
-            let circle = UIBezierPath.init(arcCenter: p, radius: 5, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
+            let circle = UIBezierPath.init(arcCenter: p, radius: 3, startAngle: 0, endAngle: CGFloat.pi * 2, clockwise: true)
             let circleLayer = CAShapeLayer()
             circleLayer.path = circle.cgPath
-            circleLayer.fillColor = UIColor.red.cgColor
+            circleLayer.fillColor = UIColor.brown.cgColor
             circleLayer.strokeColor = UIColor.red.cgColor
             let lbl = CATextLayer()
             let txt = "\(idx)"
             lbl.string = txt
-            lbl.fontSize = 11
+            lbl.fontSize = 10
             lbl.alignmentMode = .center
             let aFont = lbl.font as? UIFont ?? UIFont.systemFont(ofSize: lbl.fontSize)
             let h = lbl.fontSize * 2

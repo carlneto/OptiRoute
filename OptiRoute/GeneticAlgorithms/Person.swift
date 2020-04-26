@@ -173,18 +173,18 @@ extension Body {
         return bodies
     }
     
-    func uncrossed(maximum: Double, nearsMax: Int) -> [Body] {
+    func uncrossed(maximum: Double = 0.997, tries: Int = 16) -> [Body] {
         //return []
         //let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum * 5))
+        let limit = Swift.max(2, Int(Double(self.count) * maximum))
         let muscles = self.muscles()
         let weakests = muscles.weakests()
         for weakest in weakests {
             guard bodies.count < limit else { break }
             let nears = muscles.nears(to: weakest)
-            var maxNears = nearsMax * 2
+            var maxNears = tries
             for near in nears {
                 guard bodies.count < limit, maxNears > 0 else { break }
                 var body1 = self, body2 = self
@@ -199,7 +199,7 @@ extension Body {
         return bodies
     }
 
-    func flattened(maximum: Double, perPeak tries: Int) -> [Body] {
+    func flattened(maximum: Double = 0.33, tries: Int = 8) -> [Body] {
         //return []
         //let t = BenchTimer()
         var bodies = [Body]()
@@ -224,7 +224,7 @@ extension Body {
         return bodies
     }
     
-    func straighted(maximum: Double) -> [Body] {
+    func straighted(maximum: Double = 0.33) -> [Body] {
         //return []
         //let t = BenchTimer()
         var bodies = [Body]()
