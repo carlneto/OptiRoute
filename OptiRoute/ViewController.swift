@@ -120,37 +120,40 @@ class ViewController: UIViewController {
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false
         sampleBtn.isEnabled = false
-        
-        let isRound = false
-        let body = Body(content: locations, isRound: isRound)
-        generator = Generator(subject: body)
-        generator?.onNewGeneration = { (person, weight) in
-            DispatchQueue.main.async {
-                self.generationLbl.text = "\(weight)"
-                self.drawRoute(person.body)
-            }
-        }
-        generator?.onEvolutionEnd = { (person, weight) in
-            DispatchQueue.main.async {
-                var vipBody = person.body
-                if !isRound {
-                    let count = vipBody.count
-                    for i in 0 ..< (count * 2) {
-                        let a = vipBody[i % count]
-                        let b = vipBody[(i + 1) % count]
-                        //print("\(a.name)\t\t(\(a.muscleTo(other: b).zeros(0)))\t\t\(b.name)")
-                        if a.muscleTo(other: b) == 0 {
-                            vipBody.rotate(offset: (i + 1) % count)
-                            if let first = vipBody.first, first.name == "0" {
-                                vipBody.reverse()
-                            }
-                            break
+        var dict = [String : Any]()
+        for point in locations { dict["\(point.key)"] = point.value }
+        generator = Generator(organsNameContent: dict, andMuscles: { body, isCircle  in
+            let aName = "0", bName = "1"
+            let cWeight = 0.0
+            for o1 in body {
+                for o2 in body {
+                    if !isCircle {
+                        if o1.name == aName, o2.name == bName {
+                            o1.set(weight: cWeight, to: o2)
+                            continue
+                        }
+                        if o1.name == bName, o2.name == aName {
+                            o1.set(weight: cWeight, to: o2)
+                            continue
                         }
                     }
+                    let p1 = o1.content as! CGPoint
+                    let p2 = o2.content as! CGPoint
+                    let aWeight = hypot(Double(p1.x - p2.x), Double(p1.y - p2.y))
+                    o1.set(weight: aWeight, to: o2)
                 }
-                //print(vipBody.str)
-                self.generationLbl.text = "Fitness: \(person.weight.zeros(0))"
-                self.drawRoute(vipBody, isRound: isRound)
+            }
+        }, roundBody: false)
+        generator?.onNewGeneration = { body, weight in
+            DispatchQueue.main.async {
+                self.generationLbl.text = "\(weight)"
+                self.drawRoute(body)
+            }
+        }
+        generator?.onEvolutionEnd = { vipBody, weight, isCircle in
+            DispatchQueue.main.async {
+                self.generationLbl.text = "Fitness: \(weight)"
+                self.drawRoute(vipBody, isRound: isCircle)
                 self.startBtn.isEnabled = true
                 self.clearBtn.isEnabled = true
                 self.undoBtn.isEnabled = true
@@ -158,6 +161,7 @@ class ViewController: UIViewController {
             }
         }
         generator?.startEvolution()
+        drawPoints()
     }
     
     @IBAction func stopTap() {
@@ -274,43 +278,4 @@ class ViewController: UIViewController {
         (x:  35, y: 450, name:  "5"),
         (x:20.5, y: 349, name:  "6")
     ]
-}
-
-
-extension Body {
-    
-    init(content: Any, isRound: Bool) {
-        self.init()
-        if let dict = content as? [String : CGPoint] {
-            for point in dict {
-                _ = inserted(name: "\(point.key)", content: point.value)
-            }
-            setWeights(isRound: isRound)
-        }
-    }
-    
-    func setWeights(isRound: Bool) {
-        let aName = "0"
-        let bName = "1"
-        let cWeight = 0.0
-        Organ.relaxMuscles()
-        for o1 in self {
-            for o2 in self {
-                if !isRound {
-                    if o1.name == aName, o2.name == bName {
-                        o1.set(weight: cWeight, to: o2)
-                        continue
-                    }
-                    if o1.name == bName, o2.name == aName {
-                        o1.set(weight: cWeight, to: o2)
-                        continue
-                    }
-                }
-                let p1 = o1.content as! CGPoint
-                let p2 = o2.content as! CGPoint
-                let aWeight = hypot(Double(p1.x - p2.x), Double(p1.y - p2.y))
-                o1.set(weight: aWeight, to: o2)
-            }
-        }
-    }
 }

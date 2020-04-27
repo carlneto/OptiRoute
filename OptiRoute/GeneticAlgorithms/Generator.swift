@@ -2,24 +2,31 @@ import UIKit
 
 class Generator {
     
-    var onNewGeneration: ( (Person, Int) -> () )?
-    var onEvolutionEnd: ( (Person, Int) -> () )?
+    var onNewGeneration: ( (Body, Int) -> () )?
+    var onEvolutionEnd: ( (Body, Int, Bool) -> () )?
     
-    private var body: Body
+    private var ancestor: Person
+    private var isCircle: Bool
     private var evolving = false
     
-    init(subject: Body) {
-        body = subject
+    init(organsNameContent: [String : Any], andMuscles: (_ ancestorBody: Body, _ isCircle: Bool) -> Void, roundBody: Bool) {
+        self.isCircle = roundBody
+        var ancestorBody = Body()
+        for organNameContent in organsNameContent {
+            ancestorBody.appendOrgan(name: organNameContent.key, content: organNameContent.value)
+        }
+        ancestor = Person(body: ancestorBody)
+        andMuscles(ancestorBody, isCircle)
     }
     
     func startEvolution() {
         DispatchQueue.global().async {
             let benchTimer = BenchTimer()
-            let bodyCount = self.body.count
-            let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
+            let bodyCount = self.ancestor.body.count
+            let timeLimit = Swift.min(40.0, Double(bodyCount / 2))
             let peopleSize = Swift.min(512, 6 * bodyCount)
             print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
-            var people = People(from: self.body, size: peopleSize)
+            var people = People(from: self.ancestor.body, size: peopleSize)
             let buffer = 2
             var counter = buffer, genCount = 1
             var bestOne: Person?
@@ -28,18 +35,18 @@ class Generator {
                 let stats = people.stats()
                 var nextGeneration = People()
                 if let newBest = stats.vip {
-                    nextGeneration.addSpecial(people: stats.pop, vip: newBest, isLast: counter == 0)
+                    nextGeneration.add(people: stats.pop, vip: newBest, size: peopleSize, isLast: counter == 0)
                     //print("(\(nextGeneration.count)", terminator: ">")
                     //nextGeneration.removeDuplicates()
                     //print(nextGeneration.count, terminator: ") ")
                     //print("(\(nextGeneration.count))", terminator: " ")
                     if bestOne == nil {
                         bestOne = newBest
-                        self.onNewGeneration?(newBest, Int(newBest.weight + 0.5))
+                        self.onNewGeneration?(newBest.body, Int(newBest.weight + 0.5))
                     } else if let best = bestOne, newBest.weight < best.weight {
                         bestOne = newBest
                         counter = buffer
-                        self.onNewGeneration?(newBest, Int(newBest.weight + 0.5))
+                        self.onNewGeneration?(newBest.body, Int(newBest.weight + 0.5))
                     } else {
                         let nPersons = Swift.min(peopleSize / 3, (buffer - counter + 1) * peopleSize / 8)
                         nextGeneration.addRandom(vip: newBest, size: nPersons, isLast: counter == 0)
@@ -55,12 +62,31 @@ class Generator {
                 self.evolving = false
                 guard let bestRoute = bestOne else { return }
                 print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | genCount: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
-                self.onEvolutionEnd?(bestRoute, Int(bestRoute.weight))
+                self.ended(person: bestRoute)
             }
         }
     }
     
     func stopEvolution() {
         evolving = false
+    }
+    
+    func ended(person bestRoute: Person) {
+        var vipBody = bestRoute.body
+        if !isCircle {
+            let count = vipBody.count
+            for i in 0 ..< (count * 2) {
+                let a = vipBody[i % count]
+                let b = vipBody[(i + 1) % count]
+                if a.muscleTo(other: b) == 0 {
+                    vipBody.rotate(shift: (i + 1) % count)
+                    if let first = vipBody.first, first.name == "0" {
+                        vipBody.reverse()
+                    }
+                    break
+                }
+            }
+        }
+        self.onEvolutionEnd?(vipBody, Int(bestRoute.weight.rounded()), isCircle)
     }
 }

@@ -36,10 +36,10 @@ extension Array {
         copy.move(from: sourceIndex, to: destinationIndex, before: before)
         return copy
     }
-    mutating func reversed(between index1: Int, and index2: Int) {
-        self = self.reverse(between: index1, and: index2)
+    mutating func reverse(between index1: Int, and index2: Int) {
+        self = self.reversed(between: index1, and: index2)
     }
-    func reverse(between index1: Int, and index2: Int) -> Array {
+    func reversed(between index1: Int, and index2: Int) -> Array {
         let i1 = ((index1 % count) + count) % count
         let i2 = ((index2 % count) + count) % count
         let idx1 = Swift.min(i1, i2)
@@ -97,6 +97,9 @@ class BenchTimer {
     var elapsed: CFAbsoluteTime {
         return CFAbsoluteTimeGetCurrent() - startTime
     }
+    var milliseconds: CFAbsoluteTime {
+        return 1000 * (CFAbsoluteTimeGetCurrent() - startTime)
+    }
     func restart() {
         startTime = CFAbsoluteTimeGetCurrent()
     }
@@ -147,12 +150,17 @@ extension Int {
 }
 
 extension RangeReplaceableCollection {
-    mutating func rotate(offset: Int) {
-        let positions = ((offset % count) + count) % count
+    mutating func rotate(shift: Int) {
+        let positions = ((shift % count) + count) % count
         let index = self.index(startIndex, offsetBy: positions, limitedBy: endIndex) ?? endIndex
         let slice = self[..<index]
         removeSubrange(..<index)
         insert(contentsOf: slice, at: endIndex)
+    }
+    func rotated(shift: Int) -> Self {
+        var arr = self
+        arr.rotate(shift: shift)
+        return arr
     }
 }
 

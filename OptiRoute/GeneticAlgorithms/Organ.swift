@@ -1,10 +1,5 @@
 import UIKit
 
-protocol Fitness {
-    init(content: Any, isRound: Bool)
-    func setWeights(isRound: Bool)
-}
-
 struct Organ: Equatable, Hashable, Comparable {
     
     private static var edges = [[String] : Double]()
@@ -179,7 +174,7 @@ struct Peak: Comparable {
 }
 
 typealias Body = [Organ]
-extension Body: Fitness {
+extension Body {
     
     func index(of organName: String) -> Int? {
         for i in 0 ..< count {
@@ -190,10 +185,9 @@ extension Body: Fitness {
         return nil
     }
     
-    mutating func inserted(name: String, content core: Any) -> Organ {
+    mutating func appendOrgan(name: String, content core: Any) {
         let organ = Organ.create(name: name, content: core)
         self.append(organ)
-        return organ
     }
     
     func muscleUltra(farest: Bool) -> Muscle? {

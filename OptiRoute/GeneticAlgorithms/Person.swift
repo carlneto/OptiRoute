@@ -60,6 +60,14 @@ extension Body {
         return result
     }
     
+    func progress(from bodies: Bodies) -> String {
+        let progrss = bodies.best() - self.calculateWeight()
+        if progrss < 0 {
+            return " \(bodies.count) \t\(progrss.zeros(0))"
+        }
+        return " \(bodies.count) \t-0"
+    }
+    
     func average() -> Double {
         return self.calculateWeight() / Double(self.count)
     }
@@ -67,14 +75,18 @@ extension Body {
     /// Body operators
     
     func sort() -> [Body] {
-        return [self,
-                sortedFirst(),
-                sortedLast(),
-                sortedBoth(),
-                sorted(fromCenter: true, both: true),
-                sorted(fromCenter: true, both: false),
-                sorted(fromCenter: false, both: true),
-                sorted(fromCenter: false, both: false)]
+        //return []
+        //=let t = BenchTimer()
+        let bodies = [self,
+                      sortedFirst(),
+                      sortedLast(),
+                      sortedBoth(),
+                      sorted(fromCenter: true, both: true),
+                      sorted(fromCenter: true, both: false),
+                      sorted(fromCenter: false, both: true),
+                      sorted(fromCenter: false, both: false)]
+        //=print("\na\(self.progress(from: bodies)) t_\(t.milliseconds.zeros(0))", terminator: " ")
+        return bodies
     }
     
     func sortedFirst() ->  Body {
@@ -120,14 +132,14 @@ extension Body {
             }
         }
         if hugging {
-            organs.rotate(offset: 1)
+            organs.rotate(shift: 1)
         }
         return organs
     }
     
-    func collected() -> [Body] {
+    func collect() -> [Body] {
         //return []
-        //let t = BenchTimer()
+        //=let t = BenchTimer()
         var bodies = [Body]()
         let tot = self.count
         guard tot > 3 else { return bodies }
@@ -146,8 +158,7 @@ extension Body {
                 let bc = b.muscleTo(other: c)
                 let a2 = body[mod: ab.index - 1], b2 = b, c2 = body[mod: ab.index + 1]
                 let ab2 = a2.muscleTo(other: b2), bc2 = b2.muscleTo(other: c2), ac2 = a2.muscleTo(other: c2)
-                let oldCost = ac + ab2 + bc2
-                let newCost = ab.weakness + bc + ac2
+                let oldCost = ac + ab2 + bc2, newCost = ab.weakness + bc + ac2
                 guard newCost < oldCost else { continue }
                 let aWeight = newCost - oldCost
                 guard aWeight < gainWeight else { continue }
@@ -169,46 +180,46 @@ extension Body {
             guard body.count == self.count else { break }
             bodies.append(body)
         }
-        //print("\nf\(bodies.count) \((body.calculateWeight() - self.calculateWeight()).zeros(0)) t\(t.elapsed.zeros(3))", terminator: " ")
-        return bodies
+        //=print("\nc\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        return bodies//.swapped()
     }
     
-    func uncrossed(maximum: Double = 0.997, tries: Int = 16) -> [Body] {
+    func uncross(maxLenght: Double = 2.5, tries: Int = 20) -> [Body] {
         //return []
-        //let t = BenchTimer()
+        let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        let limit = Swift.max(2, Int(Double(self.count * 2) * maxLenght))
         let muscles = self.muscles()
         let weakests = muscles.weakests()
         for weakest in weakests {
-            guard bodies.count < limit else { break }
+            guard bodies.count < limit, t.elapsed < 0.095 else { break }
             let nears = muscles.nears(to: weakest)
             var maxNears = tries
             for near in nears {
                 guard bodies.count < limit, maxNears > 0 else { break }
                 var body1 = self, body2 = self
-                body1.reversed(between: weakest.index - 1, and: near.muscle.index)
-                body2.reversed(between: weakest.index, and: near.muscle.index - 1)
+                body1.reverse(between: weakest.index - 1, and: near.muscle.index)
+                body2.reverse(between: weakest.index, and: near.muscle.index - 1)
                 bodies.append(body1)
                 bodies.append(body2)
                 maxNears -= 1
             }
         }
-        //print("\na\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
-        return bodies
+        //=print("\nu\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        return bodies//.swapped()
     }
-
-    func flattened(maximum: Double = 0.33, tries: Int = 8) -> [Body] {
+    
+    func ejected(maxLenght: Double = 5.0, tries: Int = 20) -> [Body] {
         //return []
-        //let t = BenchTimer()
+        let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        let limit = Swift.max(2, Int(Double(self.count) * maxLenght))
         var indexes = Set<Int>()
         var body1 = self, body2 = self
         for candidate in self.flatCandidates(perPeak: tries) {
-            guard bodies.count < limit else { break }
+            guard bodies.count < limit, t.elapsed < 0.015 else { break }
             if !indexes.insert(candidate.peakIdx).inserted || !indexes.insert(candidate.neigborIdx).inserted ||
                 !indexes.insert(candidate.neigborIdx - 1).inserted {
                 body1 = self
@@ -220,16 +231,16 @@ extension Body {
             bodies.append(body1)
             bodies.append(body2)
         }
-        //print("\nb\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
-        return bodies
+        //=print("\ne\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        return bodies//.swapped()
     }
     
-    func straighted(maximum: Double = 0.33) -> [Body] {
+    func swapped(maxLenght: Double = 5.0) -> [Body] {
         //return []
-        //let t = BenchTimer()
+        //=let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
-        let limit = Swift.max(2, Int(Double(self.count) * maximum))
+        let limit = Swift.max(2, Int(Double(self.count) * maxLenght))
         var body = self
         for i in 0 ..< body.count {
             guard bodies.count < limit else { break }
@@ -244,7 +255,7 @@ extension Body {
                 bodies.append(body)
             }
         }
-        //print("\ne\(bodies.count) t\(t.elapsed.zeros(3))", terminator: " ")
+        //=print("\ns\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
         return bodies
     }
     

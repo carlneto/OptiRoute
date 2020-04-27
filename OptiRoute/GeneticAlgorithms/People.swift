@@ -3,19 +3,27 @@ import UIKit
 typealias People = [Person]
 extension People {
     
+    var totalWeight: Double {
+        return self.reduce(0.0, { $0 + $1.weight })
+    }
+    
     init(from body: Body, size: Int) {
         self.init()
-        initWith(body: body, size: size)
+        var ppl = People()
+        for sorted in body.sort() { ppl.append(Person(body: sorted)) }
+        self.add(people: ppl, vip: Person(body: body), size: size, isLast: false)
+        //=print("\ninit: \(count)")
+        while count < size / 2 {
+            if let child = child(mutation: 0.68, weight: stats().weight) { append(child) }
+        }
+        //=print("\nv\(self.stats().vip!.weight.zeros(0))\ninitWith: \(count)")
         while count < size {
             append(Person(body: body.shuffle()))
         }
     }
     
-    var totalWeight: Double {
-        return self.reduce(0.0, { $0 + $1.weight })
-    }
-    
-    func stats() -> (pop: People, weight: Double, vip: Person?) {
+    mutating func stats() -> (pop: People, weight: Double, vip: Person?) {
+        self.removeDuplicates()
         let weight = totalWeight
         let actual = currentGeneration(totalWeight: weight)
         let first = actual.first
@@ -28,41 +36,41 @@ extension People {
         return currentGeneration
     }
     
-    mutating func initWith(body: Body, size: Int) {
-        var best: Body {
-            let newStats = self.stats()
-            if let newVip = newStats.vip?.body {
-                //print("\nv\(newStats.weight.zeros(0))", terminator: " ")
-                return newVip
-            }
-            return body
-        }
-        for sorted in body.sort() { append(Person(body: sorted)) }
-        for collected in best.collected() { append(Person(body: collected)) }
-        for flatten in best.flattened() { append(Person(body: flatten)) }
-        for straighted in best.straighted() { append(Person(body: straighted)) }
-        for uncross in best.uncrossed() { append(Person(body: uncross)) }
-        let fitness = stats().weight
-        while count < size / 2 {
-            if let child = child(mutation: 0.68, weight: fitness) {
-                append(child)
-            }
-        }
-        print("\ninitWith: \(count)")
-    }
-    
-    mutating func addSpecial(people: People, vip: Person, isLast: Bool) {
+    mutating func add(people: People, vip: Person, size: Int, isLast: Bool) {
         guard !isLast else { return }
         var best: Body {
             let newStats = self.stats()
-            if let newVip = newStats.vip?.body {//print("\nv\(newStats.weight.zeros(0))", terminator: " ")
-                return newVip
+            if let newVip = newStats.vip {
+                return newVip.body.reversed()
             }
-            return vip.body
+            self = people
+            return vip.body.rotated(shift: Int(arc4random_uniform(UInt32(vip.body.count))))
         }
-        for flatten in best.flattened() { append(Person(body: flatten)) }
-        for straighted in best.straighted() { append(Person(body: straighted)) }
-        for uncross in best.uncrossed() { append(Person(body: uncross)) }
+        func swap(maxLenght: Int = 30) {
+            let t = BenchTimer()
+            //=var bodies = [Body]()
+            let stts = self.stats()
+            let pop = stts.pop
+            let limit = self.count + maxLenght
+            for aPerson in pop {
+                guard self.count < limit, t.elapsed < 0.150 else { break }
+                for swapped in aPerson.body.swapped() {
+                    append(Person(body: swapped))
+                    //=bodies.append(swapped)
+                }
+            }
+            //=print("\ns\(stts.vip!.body.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        }
+        for uncross in best.uncross() { append(Person(body: uncross)) }
+        swap()
+        for ejected in best.ejected() { append(Person(body: ejected)) }
+        for collect in best.collect() { append(Person(body: collect)) }
+        //for uncross in best.uncross() { append(Person(body: uncross)) }
+        swap()
+        let maxLenght = 32 * size / 100
+        if self.count > maxLenght {
+            self = Array(self.stats().pop[0..<Swift.min(maxLenght, self.count)])
+        }
     }
     
     mutating func addRandom(vip: Person, size: Int, isLast: Bool) {
@@ -131,5 +139,72 @@ extension People {
             }
         }
         return nil
+    }
+}
+
+typealias Bodies = [Body]
+extension Bodies {
+    
+    func best() -> Double {
+        var weight = Double(Int.max)
+        forEach { body in
+            let result = body.calculateWeight()
+            weight = Swift.min(weight, result)
+        }
+        return weight
+    }
+    
+    func progress(from weakness: Double) -> String {
+        let progrss = self.best() - weakness
+        if progrss < 0 {
+            return "\(self.count) \(progrss.zeros(0))"
+        }
+        return "\(self.count) -0"
+    }
+    
+    func vips(maxLenght: Int) -> (bodies: Bodies, weakness: Double) {
+        var bodiesWeakness = [(body: Body, weakness: Double)]()
+        forEach { body in
+            let result = body.calculateWeight()
+            bodiesWeakness.append((body: body, weakness: result))
+        }
+        bodiesWeakness.sort(by: { $0.weakness < $1.weakness })
+        var bodies = Bodies()
+        var best = 0.0
+        for bodyWeakness in bodiesWeakness {
+            if best == 0 {
+                best = bodyWeakness.weakness
+            }
+            guard bodies.count < maxLenght else { break }
+            bodies.append(bodyWeakness.body)
+        }
+        return (bodies, best)
+    }
+    
+    func swapped(maxLenght: Double = 0.33) -> Bodies {
+        //return []
+        var counter = 0
+        let t = BenchTimer()
+        var bodies = Bodies()
+        for var body in self {
+            guard body.count > 3 else { continue }
+            let limit = Swift.max(2, Int(Double(body.count) * maxLenght))
+            for i in 0 ..< body.count {
+                guard self.count < limit else { break }
+                let a = body[mod: i], b = body[mod: i + 1], c = body[mod: i + 2], d = body[mod: i + 3]
+                let ab = a.muscleTo(other: b), bc = b.muscleTo(other: c), cd = c.muscleTo(other: d)
+                let ac = a.muscleTo(other: c), cb = c.muscleTo(other: b), bd = b.muscleTo(other: d)
+                guard Swift.min(ab, bc, cd, ac, cb, bc, bd) >= 0 else { continue }
+                let old = ab + bc + cd, new = ac + cb + bd
+                if new < old {
+                    body.swapIndexes(i: i + 1, j: i + 2)
+                    counter += 1
+                }
+                guard body.count == self.count else { break }
+                bodies.append(body)
+            }
+        }
+        print("\nz\(counter) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        return bodies
     }
 }
