@@ -43,30 +43,12 @@ extension People {
             if let newVip = newStats.vip {
                 return newVip.body.reversed()
             }
-            self = people
             return vip.body.rotated(shift: Int(arc4random_uniform(UInt32(vip.body.count))))
         }
-        func swap(maxLenght: Int = 30) {
-            let t = BenchTimer()
-            //=var bodies = [Body]()
-            let stts = self.stats()
-            let pop = stts.pop
-            let limit = self.count + maxLenght
-            for aPerson in pop {
-                guard self.count < limit, t.elapsed < 0.150 else { break }
-                for swapped in aPerson.body.swapped() {
-                    append(Person(body: swapped))
-                    //=bodies.append(swapped)
-                }
-            }
-            //=print("\ns\(stts.vip!.body.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
-        }
         for uncross in best.uncross() { append(Person(body: uncross)) }
-        swap()
-        for ejected in best.ejected() { append(Person(body: ejected)) }
         for collect in best.collect() { append(Person(body: collect)) }
-        //for uncross in best.uncross() { append(Person(body: uncross)) }
-        swap()
+        for ejected in best.ejected() { append(Person(body: ejected)) }
+        for untwist in best.untwists() { append(Person(body: untwist)) }
         let maxLenght = 32 * size / 100
         if self.count > maxLenght {
             self = Array(self.stats().pop[0..<Swift.min(maxLenght, self.count)])

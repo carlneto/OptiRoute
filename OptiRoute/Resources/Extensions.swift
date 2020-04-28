@@ -36,18 +36,22 @@ extension Array {
         copy.move(from: sourceIndex, to: destinationIndex, before: before)
         return copy
     }
-    mutating func reverse(between index1: Int, and index2: Int) {
-        self = self.reversed(between: index1, and: index2)
-    }
-    func reversed(between index1: Int, and index2: Int) -> Array {
-        let i1 = ((index1 % count) + count) % count
-        let i2 = ((index2 % count) + count) % count
-        let idx1 = Swift.min(i1, i2)
-        let idx2 = Swift.max(i1, i2)
-        let arr0 = self[0..<idx1]
-        let arr1 = Array(self[idx1...idx2].reversed())
-        let arr2 = self[(idx2 + 1)..<count]
-        return arr0 + arr1 + arr2
+//    mutating func reverse(between index1: Int, and index2: Int) {
+//        self = self.reversed(between: index1, and: index2)
+//    }
+    func reversed(between index1: Int, and index2: Int) -> Array? {
+        guard index1 != index2, 0..<count ~= index1, 0..<count ~= index2 else { return nil }
+        if index1 > index2 {
+            let reversed = Array((self[(index1 + 1) ..< count] + self[0 ..< index2]).reversed())
+            let arr = Array(self[index2 ... index1] + reversed)
+            let cut = count - index2
+            return Array(arr[cut ..< count] + arr[0 ..< cut])
+        } else {
+            let arr0 = self[0 ... index1]
+            let arr1 = Array(self[(index1 + 1) ..< index2].reversed())
+            let arr2 = self[index2 ..< count]
+            return arr0 + arr1 + arr2
+        }
     }
     func shuffle() -> [Element] {
         return sorted(by: { (_, _) -> Bool in
@@ -146,6 +150,16 @@ extension Int {
     var factorial: Int? {
         guard factDouble < Double(Int.max) else { return nil }
         return Int(factDouble)
+    }
+    func sequence(to included: Int) -> (straight: [Int], inverted: [Int]) {
+        var straight = [self], invertedInMiddle = [self]
+        for i in (self + 1)...(included - 1) {
+            straight.append(i)
+            invertedInMiddle.append(self + included - i)
+        }
+        straight.append(included)
+        invertedInMiddle.append(included)
+        return (straight, invertedInMiddle)
     }
 }
 
