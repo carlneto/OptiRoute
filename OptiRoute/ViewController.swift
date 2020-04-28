@@ -122,28 +122,22 @@ class ViewController: UIViewController {
         sampleBtn.isEnabled = false
         var dict = [String : Any]()
         for point in locations { dict["\(point.key)"] = point.value }
-        generator = Generator(organsNameContent: dict, andMuscles: { body, isCircle  in
-            let aName = "0", bName = "1"
-            let cWeight = 0.0
+        generator = Generator(organsNameContent: dict, muscles: { body, isLinear -> Body in
             for o1 in body {
                 for o2 in body {
-                    if !isCircle {
-                        if o1.name == aName, o2.name == bName {
-                            o1.set(weight: cWeight, to: o2)
-                            continue
-                        }
-                        if o1.name == bName, o2.name == aName {
-                            o1.set(weight: cWeight, to: o2)
-                            continue
-                        }
-                    }
+                    guard o1 != o2 else { continue }
                     let p1 = o1.content as! CGPoint
                     let p2 = o2.content as! CGPoint
                     let aWeight = hypot(Double(p1.x - p2.x), Double(p1.y - p2.y))
                     o1.set(weight: aWeight, to: o2)
                 }
             }
-        }, roundBody: false)
+            if isLinear, let a = body.organ(by: "0"), let b = body.organ(by: "1") {
+                a.set(weight: 0.0, to: b)
+                b.set(weight: 0.0, to: a)
+            }
+            return body
+        }, isCircle: false)
         generator?.onNewGeneration = { body, weight in
             DispatchQueue.main.async {
                 self.generationLbl.text = "\(weight)"

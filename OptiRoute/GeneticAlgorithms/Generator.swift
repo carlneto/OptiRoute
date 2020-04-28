@@ -9,22 +9,22 @@ class Generator {
     private var isCircle: Bool
     private var evolving = false
     
-    init(organsNameContent: [String : Any], andMuscles: (_ ancestorBody: Body, _ isCircle: Bool) -> Void, roundBody: Bool) {
-        self.isCircle = roundBody
-        var ancestorBody = Body()
+    init(organsNameContent: [String : Any], muscles: (_ body: Body, _ isLinear: Bool) -> Body, isCircle: Bool) {
+        Organ.relax()
+        self.isCircle = isCircle
+        var body = Body()
         for organNameContent in organsNameContent {
-            ancestorBody.appendOrgan(name: organNameContent.key, content: organNameContent.value)
+            body.appendOrgan(name: organNameContent.key, content: organNameContent.value)
         }
-        ancestor = Person(body: ancestorBody)
-        andMuscles(ancestorBody, isCircle)
+        ancestor = Person(body: muscles(body, !self.isCircle))
     }
     
     func startEvolution() {
         DispatchQueue.global().async {
             let benchTimer = BenchTimer()
             let bodyCount = self.ancestor.body.count
-            let timeLimit = Swift.min(40.0, Double(bodyCount / 2))
-            let peopleSize = Swift.min(512, 6 * bodyCount)
+            let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
+            let peopleSize = Swift.min(512, 4 * bodyCount)
             print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
             var people = People(from: self.ancestor.body, size: peopleSize)
             let buffer = 2
@@ -75,16 +75,20 @@ class Generator {
         var vipBody = bestRoute.body
         if !isCircle {
             let count = vipBody.count
-            for i in 0 ..< (count * 2) {
+            var min = Double(Int.max)
+            var idx = 0
+            for i in 0 ..< count {
                 let a = vipBody[i % count]
                 let b = vipBody[(i + 1) % count]
-                if a.muscleTo(other: b) == 0 {
-                    vipBody.rotate(shift: (i + 1) % count)
-                    if let first = vipBody.first, first.name == "0" {
-                        vipBody.reverse()
-                    }
-                    break
+                let c = Swift.min(a.muscleTo(other: b), b.muscleTo(other: a))
+                if min > c {
+                    min = c
+                    idx = i
                 }
+            }
+            vipBody.rotate(shift: idx + 1)
+            if let first = vipBody.first, first.name == "0" {
+                vipBody.reverse()
             }
         }
         self.onEvolutionEnd?(vipBody, Int(bestRoute.weight.rounded()), isCircle)

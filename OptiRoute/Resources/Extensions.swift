@@ -17,10 +17,6 @@ extension Array {
     mutating func swapIndexes(i: Int, j: Int) {
         swapAt(modIndex(i), modIndex(j))
     }
-    mutating func insert(item: Element, at destinationIndex: Int, before: Bool = true) {
-        let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
-        self.insert(item, at: toIdx)
-    }
     mutating func move(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) {
         let fromIdx = modIndex(sourceIndex)
         let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
@@ -31,14 +27,6 @@ extension Array {
         }
         self.insert(self.remove(at: fromIdx), at: fromIdx < toIdx ? toIdx - 1 : toIdx)
     }
-    func moved(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) -> Array {
-        var copy = self
-        copy.move(from: sourceIndex, to: destinationIndex, before: before)
-        return copy
-    }
-//    mutating func reverse(between index1: Int, and index2: Int) {
-//        self = self.reversed(between: index1, and: index2)
-//    }
     func reversed(between index1: Int, and index2: Int) -> Array? {
         guard index1 != index2, 0..<count ~= index1, 0..<count ~= index2 else { return nil }
         if index1 > index2 {
@@ -57,21 +45,6 @@ extension Array {
         return sorted(by: { (_, _) -> Bool in
             return arc4random() < arc4random()
         })
-    }
-    var splitted: (left: [Element], right: [Element]) {
-        let ct = self.count
-        let half = ct / 2
-        let leftSplit = self[0 ..< half]
-        let rightSplit = self[half ..< ct]
-        return (left: Array(leftSplit), right: Array(rightSplit))
-    }
-    func chunk(min size: Int) -> [[Element]] {
-        var arr = chunk(max: size)
-        if let last = arr.last, last.count < size {
-            arr[0] += last
-            arr.removeLast()
-        }
-        return arr
     }
     func chunk(max size: Int) -> [[Element]] {
         return stride(from: 0, to: count, by: size).map {
@@ -119,21 +92,6 @@ extension Bool {
     }
 }
 
-extension Collection where Element: Numeric {
-    /// Returns the total sum of all elements in the array
-    var total: Element { reduce(0, +) }
-}
-
-extension Collection where Element: BinaryInteger {
-    /// Returns the average of all elements in the array
-    var average: Double { isEmpty ? 0 : Double(total) / Double(count) }
-}
-
-extension Collection where Element: BinaryFloatingPoint {
-    /// Returns the average of all elements in the array
-    var average: Element { isEmpty ? 0 : total / Element(count) }
-}
-
 extension Double {
     func zeros(_ decimals: Int) -> String {
         return String(format: "%.\(decimals)f", self)
@@ -141,16 +99,6 @@ extension Double {
 }
 
 extension Int {
-    subscript(`in` count: Int) -> Int {
-        return ((self % count) + count) % count
-    }
-    var factDouble: Double {
-        return (1...self).map(Double.init).reduce(1.0, *)
-    }
-    var factorial: Int? {
-        guard factDouble < Double(Int.max) else { return nil }
-        return Int(factDouble)
-    }
     func sequence(to included: Int) -> (straight: [Int], inverted: [Int]) {
         var straight = [self], invertedInMiddle = [self]
         for i in (self + 1)...(included - 1) {
@@ -211,17 +159,4 @@ extension String {
         label.sizeToFit()
         return label.frame.width
     }
-}
-
-func triangleHeight(left: Double, base: Double, right: Double) -> Double? {
-    guard base < left + right else { return nil }
-    guard left < base + right else { return nil }
-    guard right < left + base else { return nil }
-    let s = (left + base + right) / 2
-    let a = (s * (s - left) * (s - base) * (s - right)).squareRoot()
-    return 2 * a / base
-}
-
-func triangleOpposite(hypotenuse: Double, adjacent: Double) -> Double {
-    return (pow(hypotenuse, 2) - pow(adjacent, 2)).squareRoot()
 }
