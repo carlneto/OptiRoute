@@ -83,61 +83,81 @@ extension Body {
         //return []
         //=let t = BenchTimer()
         let bodies = [self,
-                      sortedFirst(),
-                      sortedLast(),
-                      sortedBoth(),
-                      sorted(fromCenter: true, both: true),
-                      sorted(fromCenter: true, both: false),
-                      sorted(fromCenter: false, both: true),
-                      sorted(fromCenter: false, both: false)]
-        //=print("\ns\(self.progress(from: bodies)) t_\(t.milliseconds.zeros(0))", terminator: " ")
+                      self.sortedFirst(),
+                      self.sortedLast(),
+                      self.sortedBoth(),
+                      self.sorted(fromCenter: true, both: true),
+                      self.sorted(fromCenter: true, both: false),
+                      self.sorted(fromCenter: false, both: true),
+                      self.sorted(fromCenter: false, both: false)]
+        //=print("\ns\(self.progress(from: bodies)) t_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
     func sortedFirst() ->  Body {
         guard let first = self.first else { return self }
-        return sorted(from: first)
+        return self.sorted(from: first)
     }
     
     func sortedLast() ->  Body {
         guard let last = self.last else { return self }
-        return sorted(from: last)
+        return self.sorted(from: last)
     }
     
     func sortedBoth() ->  Body {
         guard let first = self.first, let last = self.last else { return self }
-        return sorted(from: first, and: last)
+        return self.sorted(from: first, and: last)
     }
     
     func sorted(fromCenter: Bool, both: Bool) -> Body {
         guard let pair = muscleUltra(farest: !fromCenter) else { return self }
-        let organs = sorted(from: pair.previous, and: both ? pair.actual : nil)
-        return organs
+        return self.sorted(from: pair.previous, and: both ? pair.actual : nil)
     }
     
     private func sorted(from one: Organ, and two: Organ? = nil) -> Body {
-        let hugging = two != nil
+        let tot = self.count
         var baseBody = self
         var organs = [Organ]()
-        func move(organ: Organ) -> Organ {
+        func move(organ: Organ, toFront: Bool = false) -> Organ {
             guard let idx = baseBody.firstIndex(of: organ) else { return organ }
             let newOrgan = baseBody.remove(at: idx)
-            organs.append(newOrgan)
+            toFront ? organs.insert(newOrgan, at: 0) : organs.append(newOrgan)
             return newOrgan
         }
-        var o1 = move(organ: one)
-        var o2 = two ?? one
-        if hugging {
-            o2 = move(organ: o2)
-        }
-        while organs.count < self.count {
-            o1 = move(organ: o1.neighbor(body: baseBody))
-            if hugging {
-                o2 = move(organ: o2.neighbor(body: baseBody))
+        if let two = two {
+            var o1 = move(organ: one)
+            var o2 = move(organ: two)
+            while organs.count < tot, baseBody.count > 0 {
+                let no1 = o1.neighbor(body: baseBody)
+                let no2 = o2.neighbor(body: baseBody)
+                let t1 = no1 ?? no2, t2 = no2 ?? no1
+                guard let n1 = t1, let n2 = t2 else {
+                    organs += baseBody
+                    baseBody = []
+                    continue
+                }
+                if n1 != n2 {
+                    o1 = move(organ: n1)
+                    o2 = move(organ: n2, toFront: true)
+                } else {
+                    if o1.muscleTo(other: n1) < o2.muscleTo(other: n1) {
+                        o1 = move(organ: n1)
+                    } else {
+                        o2 = move(organ: n1, toFront: true)
+                    }
+                }
+            }
+            if let oneIdx = organs.firstIndex(of: one) {
+                organs.rotate(shift: oneIdx)
+            }
+        } else {
+            var o1 = move(organ: one)
+            while organs.count < tot, baseBody.count > 0, let n1 = o1.neighbor(body: baseBody) {
+                o1 = move(organ: n1)
             }
         }
-        if hugging {
-            organs.rotate(shift: 1)
+        guard organs.count == tot else {
+            return self
         }
         return organs
     }
@@ -176,11 +196,11 @@ extension Body {
         var bodies = [Body]()
         let tot = self.count
         guard tot > 3 else { return bodies }
-        let weaknessMax = self.average()
         var candidates = [(from: String, to: String, gain: Double)]()
         var body = self
+        let weaknessMax = body.average()
         for (i, a) in body.enumerated() {
-            guard t.elapsed < 0.020 else { break }
+            guard t.elapsed < 0.025 else { break }
             let c = body[mod: i + 1]
             let ac = a.muscleTo(other: c)
             let ab_s = a.neighbors(body: body, maxWeakness: weaknessMax)
@@ -214,20 +234,21 @@ extension Body {
             guard body.count == self.count else { break }
             bodies.append(body)
         }
-        //=print("\nc\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        //=print("\nc\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies//.swapped()
     }
     
-    func ejected() -> [Body] {
+    func release() -> [Body] {
         //return []
         let t = BenchTimer()
         let tot = self.count
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
         var indexes = Set<Int>()
+        var bestWeight = self.calculateWeight()
         var body1 = self, body2 = self
         for candidate in self.flatCandidates() {
-            guard t.elapsed < 0.015 else { break }
+            guard t.elapsed < 0.020 else { break }
             if !indexes.insert(candidate.peakIdx).inserted ||
                 !indexes.insert(candidate.neigborIdx).inserted ||
                 !indexes.insert(candidate.neigborIdx - 1).inserted {
@@ -243,10 +264,15 @@ extension Body {
                 indexes = Set<Int>()
                 continue
             }
-            bodies.append(body1)
-            bodies.append(body2)
+            func append(aBody: Body, weakness: Double) {
+                guard weakness < bestWeight else { return }
+                bodies.append(aBody)
+                bestWeight = weakness
+            }
+            append(aBody: body1, weakness: body1.calculateWeight())
+            append(aBody: body2, weakness: body2.calculateWeight())
         }
-        //=print("\ne\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        //=print("\nr\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies//.swapped()
     }
     
@@ -261,16 +287,16 @@ extension Body {
                 bodies.append(untwist)
                 vip = untwist
             }
-            //=print("\nx\(self.progress(from: [vip])) i\(i)\tm_\(t.elapsed.zeros(3))", terminator: " ")
+            //print("\nx\(self.progress(from: [vip])) i\(i)\tm_\(t.elapsed.zeros(3))", terminator: " ")
         }
-        //=print("\nt\(self.progress(from: bodies)) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
+        //=print("\nt\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
     private func untwist(interval: Int) -> Body? {
         let tot = self.count
+        guard 3 ..< (tot / 2) ~= interval else { return nil }
         var body = self
-        guard 3 ..< (body.count / 2) ~= interval else { return nil }
         for i in 0 ..< tot {
             if let costs = body.costs(from: i, by: interval), costs.new < costs.old,
                 let aBody = body.reversed(between: i, and: i + interval) {

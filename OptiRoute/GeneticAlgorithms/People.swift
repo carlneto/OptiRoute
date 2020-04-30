@@ -9,9 +9,14 @@ extension People {
     
     init(from body: Body, size: Int) {
         self.init()
-        for sorted in body.sort() { self.append(Person(body: sorted)) }
-        self.add(people: self, vip: Person(body: body), size: size, isLast: false)
-        print("\ninit: \(count)")
+        for b in body.sort() { self.append(Person(body: b)) }
+        for person in self {
+            for b in person.body.uncross() { self.append(Person(body: b)) }
+        }
+        for person in self {
+            for b in person.body.untwists(interval: body.count / 3) { self.append(Person(body: b)) }
+        }
+        //=print("\ninit: \(count)")
         while !self.isEmpty, self.count < size / 2 {
             if let child = self.child(mutation: 0.68, weight: stats().weight) { self.append(child) }
         }
@@ -45,12 +50,11 @@ extension People {
             }
             return vip.body.reversed()
         }
-        for uncross in best.uncross() { self.append(Person(body: uncross)) }
-        for collect in best.collect() { self.append(Person(body: collect)) }
-        for ejected in best.ejected() { self.append(Person(body: ejected)) }
-        //for untwist in best.untwists() { self.append(Person(body: untwist)) }
+        for b in best.uncross() { self.append(Person(body: b)) }
+        for b in best.collect() { self.append(Person(body: b)) }
+        for b in best.release() { self.append(Person(body: b)) }
         for person in self {
-            for untwist in person.body.untwists(interval: 5) { self.append(Person(body: untwist)) }
+            for b in person.body.untwists(interval: 5) { self.append(Person(body: b)) }
         }
     }
     
@@ -68,10 +72,10 @@ extension People {
         }
     }
     
-    mutating func addChildren(statistics: (pop: People, weight: Double, vip: Person?), size: Int, isLast: Bool) {
+    mutating func addChildren(statistics: (pop: People, weight: Double, vip: Person?),
+                              probInitial: Double = 0.68, size: Int, isLast: Bool) {
         guard !isLast else { return }
         self.removeDuplicates()
-        let probInitial = 0.68
         var mutationProb = probInitial
         repeat {
             if let child = statistics.pop.child(mutation: mutationProb, weight: statistics.weight) {

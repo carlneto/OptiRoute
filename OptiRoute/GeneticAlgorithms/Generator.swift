@@ -19,19 +19,33 @@ class Generator {
         ancestor = Person(body: muscles(body, !self.isCircle))
     }
     
+    private var randomBody: Body {
+        let pos = Int(arc4random_uniform(UInt32(self.ancestor.body.count)))
+        return self.ancestor.body.rotated(shift: pos).shuffled()
+    }
+    
     func startEvolution() {
         DispatchQueue.global().async {
-            let benchTimer = BenchTimer()
+            let t = BenchTimer()
             let bodyCount = self.ancestor.body.count
-            let timeLimit = Swift.min(30.0, Double(bodyCount / 2))
-            let peopleSize = Swift.min(512, 4 * bodyCount)
-            print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))")
+            let timeLimit = Swift.min(45.0, Double(bodyCount / 2))
+            let timeMinimum = timeLimit / 6
+            var peopleSize = Swift.min(512, 4 * bodyCount)
+            var mutationProb = 0.50
+            print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))", terminator: " ")
             var people = People(from: self.ancestor.body, size: peopleSize)
             let buffer = 2
             var counter = buffer, genCount = 1
             var bestOne: Person?
             self.evolving = true
             while self.evolving {
+                if counter == 1, t.elapsed < timeMinimum {
+                    mutationProb = 0.68
+                    peopleSize = Swift.max(bodyCount / 3, 100 * peopleSize / 110)
+                    //=print("\n#\(peopleSize) i\(genCount) \(t.elapsed.zeros(3))", terminator: " ")
+                    people = People(from: self.randomBody, size: peopleSize)
+                    counter = buffer
+                }
                 let stats = people.stats()
                 var nextGeneration = People()
                 if let newBest = stats.vip {
@@ -54,14 +68,15 @@ class Generator {
                     }
                 }
                 nextGeneration.addRoulette(people: stats.pop, size: peopleSize / 4, isLast: counter == -1)
-                nextGeneration.addChildren(statistics: stats, size: peopleSize, isLast: counter == -1)
+                nextGeneration.addChildren(statistics: stats, probInitial: mutationProb,
+                                           size: peopleSize, isLast: counter == -1)
                 people = nextGeneration
                 print("\(counter)", terminator: " ")
                 genCount += 1
-                guard counter < 0 || benchTimer.elapsed > timeLimit else { continue }
+                guard counter < 0 || t.elapsed > timeLimit else { continue }
                 self.evolving = false
                 guard let bestRoute = bestOne else { return }
-                print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | genCount: \(genCount) | \(benchTimer.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | genCount: \(genCount) | \(t.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
                 self.ended(person: bestRoute)
             }
         }

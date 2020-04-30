@@ -25,12 +25,13 @@ struct Organ: Equatable, Hashable, Comparable {
         Organ.edges[[self.name, other.name]] = weight
     }
     
-    func neighbor(body: Body) -> Organ {
-        var contiguous = self
+    func neighbor(body: Body) -> Organ? {
+        var contiguous: Organ?
         var weight: Double?
         for organ in body {
             guard organ != self else { continue }
-            let muscle = muscleTo(other: organ)
+            let muscle = self.muscleTo(other: organ)
+            guard muscle > 0 else { if muscle < 0 { continue } else { return organ } }
             guard let w = weight else {
                 contiguous = organ
                 weight = muscle
@@ -43,13 +44,13 @@ struct Organ: Equatable, Hashable, Comparable {
         }
         return contiguous
     }
-    
+  
     func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
         guard body.count > 0 else { return [] }
         var arr = [(index: Int, organ: Organ, weakness: Double)]()
         for (idx, organ) in body.enumerated() {
             guard organ != self else { continue }
-            let weakness = muscleTo(other: organ)
+            let weakness = self.muscleTo(other: organ)
             guard weakness > 0 else { continue }
             arr.append((idx, organ, weakness))
         }
@@ -130,30 +131,11 @@ extension Body {
     }
     
     func muscleUltra(farest: Bool) -> Muscle? {
-        var one: Organ?
-        var two: Organ?
-        var index: Int?
-        var weakness: Double?
-        for o1 in self {
-            for (idx2, o2) in self.enumerated() {
-                guard o1 != o2 else { continue }
-                let bond = o1.muscleTo(other: o2)
-                guard let saved = weakness else {
-                    one = o1
-                    two = o2
-                    index = idx2
-                    weakness = bond
-                    continue
-                }
-                guard farest ? bond > saved : bond < saved else { continue }
-                one = o1
-                two = o2
-                index = idx2
-                weakness = bond
-            }
+        if farest {
+            return self.muscles().sorted(by: { $0.weakness > $1.weakness } ).first
+        } else {
+            return self.muscles().sorted(by: { $0.weakness < $1.weakness } )[at: 1]
         }
-        guard let i2 = index, let o1 = one, let o2 = two,  let flaccidity = weakness else { return nil }
-        return Muscle(index: i2, previous: o1, weakness: flaccidity, actual: o2)
     }
     
     func muscles() -> Muscles {

@@ -11,6 +11,13 @@ extension Array {
     subscript(mod index: Index) -> Element {
         return self[modIndex(index)]
     }
+    subscript(at index: Index) -> Element? {
+        guard 0 ..< self.count ~= index else { return nil }
+        return self[index]
+    }
+    func upTo(_ index: Index) -> [Element] {
+        return Array(self.prefix(upTo: Swift.min(index, self.count)))
+    }
     func modIndex(_ index: Index) -> Index {
         return ((index % count) + count) % count
     }
@@ -26,6 +33,10 @@ extension Array {
             return
         }
         self.insert(self.remove(at: fromIdx), at: fromIdx < toIdx ? toIdx - 1 : toIdx)
+    }
+    mutating func pick(at idx: Int) -> Element? {
+        guard 0 ..< self.count ~= idx, self.count > 0 else { return nil }
+        return self.remove(at: idx)
     }
     func reversed(between index1: Int, and index2: Int) -> Array? {
         guard index1 != index2, 0..<count ~= index1, 0..<count ~= index2 else { return nil }
@@ -89,6 +100,12 @@ class BenchTimer {
 extension Bool {
     static var arcRandom: Bool {
         return arc4random() < arc4random()
+    }
+    static var xorRandom: Bool {
+        return Bool.random().xor(Bool.arcRandom)
+    }
+    func xor(_ other: Bool) -> Bool {
+        return self != other
     }
 }
 
