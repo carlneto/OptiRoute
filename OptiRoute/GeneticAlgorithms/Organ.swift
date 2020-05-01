@@ -199,7 +199,8 @@ extension Body {
             let actualCost = peak.prevEdge + peak.nextEdge
             var neibhborCandidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
             let s = BenchTimer()
-            for neighbor in peak.neighbors(body: self, maximum: self.average()) {
+            let neighbors = peak.neighbors(body: self, maximum: self.average() * 2)
+            for neighbor in neighbors {
                 guard neighbor.weakness > 0 else { continue }
                 let newCost = peak.oposEdge + neighbor.weakness
                 guard newCost < actualCost else { continue }

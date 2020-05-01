@@ -13,6 +13,10 @@ class Generator {
         Organ.relax()
         self.isCircle = isCircle
         var body = Body()
+        guard organsNameContent.count > 2 else {
+            ancestor = Person(body: body)
+            return
+        }
         for organNameContent in organsNameContent {
             body.appendOrgan(name: organNameContent.key, content: organNameContent.value)
         }
@@ -20,19 +24,19 @@ class Generator {
     }
     
     private var randomBody: Body {
-        let pos = Int(arc4random_uniform(UInt32(self.ancestor.body.count)))
-        return self.ancestor.body.rotated(shift: pos).shuffled()
+        //let pos = Int(arc4random_uniform(UInt32(self.ancestor.body.count / 5)))//.rotated(shift: pos).mixUp()
+        return self.ancestor.body.shuffled()
     }
     
     func startEvolution() {
         DispatchQueue.global().async {
             let t = BenchTimer()
             let bodyCount = self.ancestor.body.count
+            guard bodyCount > 2 else { return }
             let timeLimit = Swift.min(45.0, Double(bodyCount / 2))
-            let timeMinimum = timeLimit / 6
-            var peopleSize = Swift.min(512, 4 * bodyCount)
-            var mutationProb = 0.50
-            print("\npop:\(peopleSize) bodyCount:\(bodyCount) time:\(timeLimit.zeros(1))", terminator: " ")
+            let timeMinimum = timeLimit / 4
+            let peopleSize = Swift.min(512, 4 * bodyCount)
+            print("\npop \(peopleSize) bodyCount:\(bodyCount) t\(timeLimit.zeros(1)) ... ", terminator: " ")
             var people = People(from: self.ancestor.body, size: peopleSize)
             let buffer = 2
             var counter = buffer, genCount = 1
@@ -40,16 +44,14 @@ class Generator {
             self.evolving = true
             while self.evolving {
                 if counter == 1, t.elapsed < timeMinimum {
-                    mutationProb = 0.68
-                    peopleSize = Swift.max(bodyCount / 3, 100 * peopleSize / 110)
-                    //=print("\n#\(peopleSize) i\(genCount) \(t.elapsed.zeros(3))", terminator: " ")
                     people = People(from: self.randomBody, size: peopleSize)
+                    //=print("\nnew \(peopleSize) @\(genCount) t\(timeLimit.zeros(1)) ... ", terminator: " ")
                     counter = buffer
                 }
                 let stats = people.stats()
                 var nextGeneration = People()
                 if let newBest = stats.vip {
-                    nextGeneration.add(people: stats.pop, vip: newBest, size: peopleSize, isLast: counter == 0)
+                    nextGeneration.add(vip: newBest, size: peopleSize, isLast: counter == 0)
                     //print("(\(nextGeneration.count)", terminator: ">")
                     //nextGeneration.removeDuplicates()
                     //print(nextGeneration.count, terminator: ") ")
@@ -67,16 +69,14 @@ class Generator {
                         counter -= 1
                     }
                 }
-                nextGeneration.addRoulette(people: stats.pop, size: peopleSize / 4, isLast: counter == -1)
-                nextGeneration.addChildren(statistics: stats, probInitial: mutationProb,
-                                           size: peopleSize, isLast: counter == -1)
+                nextGeneration.addChildren(statistics: stats, prob: 0.68, size: peopleSize, isLast: counter == -1)
                 people = nextGeneration
                 print("\(counter)", terminator: " ")
                 genCount += 1
                 guard counter < 0 || t.elapsed > timeLimit else { continue }
                 self.evolving = false
                 guard let bestRoute = bestOne else { return }
-                print("\npop:\(peopleSize) bodyCount:\(bestRoute.body.count), counter: \(counter) | genCount: \(genCount) | \(t.elapsed.zeros(1)) > \(timeLimit.zeros(1)), bestRoute \(bestRoute.weight.zeros(0))")
+                print("\npop \(peopleSize) bodyCount \(bestRoute.body.count) counter \(counter) genCount \(genCount) t\(t.elapsed.zeros(1))_\(timeLimit.zeros(1)) bestRoute \(bestRoute.weight.zeros(0))")
                 self.ended(person: bestRoute)
             }
         }

@@ -115,7 +115,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func startTap() {
-        guard locations.count > 1 else { return }
+        guard locations.count > 2 else { return }
         startBtn.isEnabled = false
         clearBtn.isEnabled = false
         undoBtn.isEnabled = false

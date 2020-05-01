@@ -38,8 +38,8 @@ class Person: Hashable {
     }
     
     func mutate(withOther parentTwo: Person, probability percentage: Double) -> Person {
-        let finalChild = Person(body: self.body.mutate(withOther: parentTwo.body, probability: percentage))
-        return finalChild
+        let body = self.body.mutate(withOther: parentTwo.body, probability: percentage)
+        return Person(body: body)
     }
 }
 
@@ -49,7 +49,7 @@ extension Body {
         var result = People()
         if size > 0 {
             for _ in 0 ..< size {
-                result.append(Person(body: self.shuffle()))
+                result.append(Person(body: self.shuffled()))
             }
         }
         return result
@@ -156,9 +156,7 @@ extension Body {
                 o1 = move(organ: n1)
             }
         }
-        guard organs.count == tot else {
-            return self
-        }
+        guard organs.count == tot else { return self }
         return organs
     }
     
@@ -198,7 +196,7 @@ extension Body {
         guard tot > 3 else { return bodies }
         var candidates = [(from: String, to: String, gain: Double)]()
         var body = self
-        let weaknessMax = body.average()
+        let weaknessMax = body.average() * 2
         for (i, a) in body.enumerated() {
             guard t.elapsed < 0.025 else { break }
             let c = body[mod: i + 1]
@@ -219,6 +217,7 @@ extension Body {
                 gainWeight = aWeight
                 neighborName = ab.organ.name
             }
+            guard !neighborName.isEmpty else { continue }
             candidates.append((from: neighborName, to: c.name, gain: gainWeight))
         }
         guard !candidates.isEmpty else { return bodies }
@@ -295,7 +294,7 @@ extension Body {
     
     private func untwist(interval: Int) -> Body? {
         let tot = self.count
-        guard 3 ..< (tot / 2) ~= interval else { return nil }
+        guard tot > 2, 3 ..< Swift.max(3, tot / 2) ~= interval else { return nil }
         var body = self
         for i in 0 ..< tot {
             if let costs = body.costs(from: i, by: interval), costs.new < costs.old,
@@ -325,8 +324,7 @@ extension Body {
     
     func mutate(withOther bodyTwo: Body, probability percentage: Double) -> Body {
         let child = produceOffspring(secondBody: bodyTwo)
-        let finalChild = child.mutate(probability: percentage)
-        return finalChild
+        return child.mutate(probability: percentage)
     }
     
     private func produceOffspring(secondBody: Body) -> Body {

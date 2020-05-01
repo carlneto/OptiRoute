@@ -52,7 +52,7 @@ extension Array {
             return arr0 + arr1 + arr2
         }
     }
-    func shuffle() -> [Element] {
+    func mixUp() -> [Element] {
         return sorted(by: { (_, _) -> Bool in
             return arc4random() < arc4random()
         })
@@ -91,18 +91,16 @@ class BenchTimer {
     func restart() {
         startTime = CFAbsoluteTimeGetCurrent()
     }
-    func prt(restart: Bool = true, zeros: Int = 4, msg: String = "t:") {
-        print("\(msg)\(elapsed.zeros(zeros))")
-        if restart { startTime = CFAbsoluteTimeGetCurrent() }
+    func str(reset: Bool, zeros: Int, leading: String = "", trailing: String = "") -> String {
+        let ans = "\(leading)\(elapsed.zeros(zeros))\(trailing)"
+        if reset { restart() }
+        return ans
     }
 }
 
 extension Bool {
     static var arcRandom: Bool {
         return arc4random() < arc4random()
-    }
-    static var xorRandom: Bool {
-        return Bool.random().xor(Bool.arcRandom)
     }
     func xor(_ other: Bool) -> Bool {
         return self != other
