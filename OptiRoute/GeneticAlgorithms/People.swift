@@ -123,9 +123,7 @@ extension People {
         var pick = drand48()
         for (idx, person) in self.enumerated() {
             pick -= (person.weight / weightTotal)
-            if pick <= 0 {
-                return (idx, person)
-            }
+            if pick <= 0 { return (idx, person) }
         }
         return nil
     }
@@ -184,65 +182,55 @@ extension People {
         var firstParents = self
         var children = Bodies()
         let total = self.count * 2
+        func duplicatesForGenes(genes: Body) -> [Organ: Int] {
+            var set = Set<Organ>()
+            var duplicates: [Organ : Int] = [:]
+            var index = 0
+            for gene in genes {
+                if set.contains(gene) { duplicates[gene] = index }
+                else { set.insert(gene) }
+                index += 1
+            }
+            return duplicates
+        }
+        func swapDuplicates( genesA: inout Body, _ genesB: inout Body) {
+            var duplicatesA: [Organ : Int] = duplicatesForGenes(genes: genesA)
+            var duplicatesB: [Organ : Int] = duplicatesForGenes(genes: genesB)
+            while duplicatesA.count > 0 {
+                guard let a = duplicatesA.popFirst(),let b = duplicatesB.popFirst() else { continue }
+                genesA[a.1] = b.0
+                genesB[b.1] = a.0
+            }
+        }
+        func performCrossover(chromosomeA: Body, chromosomeB: Body) -> (childA: Body, childB: Body) {
+            let point1 = Int(arc4random_uniform(UInt32(chromosomeA.count)))
+            let point2 = Int(arc4random_uniform(UInt32(chromosomeB.count)))
+            let crossoverA = Swift.min(point1, point2)
+            var childGenesA = Body()
+            var childGenesB = Body()
+            for i in 0 ..< chromosomeA.count {
+                if i < crossoverA {
+                    childGenesA.append(chromosomeA[i])
+                    childGenesB.append(chromosomeB[i])
+                } else {
+                    childGenesA.append(chromosomeB[i])
+                    childGenesB.append(chromosomeA[i])
+                }
+            }
+            return (childA: childGenesA, childB: childGenesB)
+        }
         while children.count < total {
             let parentA = firstParents.remove(at: Int(arc4random_uniform(UInt32(firstParents.count))))
             let parentB = firstParents.remove(at: Int(arc4random_uniform(UInt32(firstParents.count))))
-            if firstParents.count < 2 {
-                firstParents = self
-            }
+            if firstParents.count < 2 { firstParents = self }
             let childs = performCrossover(chromosomeA: parentA.body, chromosomeB: parentB.body)
             var childA = childs.childA
             var childB = childs.childB
-            if !allowDuplicates {
-                swapDuplicates(genesA: &childA, &childB)
-            }
+            if !allowDuplicates { swapDuplicates(genesA: &childA, &childB) }
             children.append(childA)
             children.append(childB)
         }
         return children
-    }
-    
-    private func performCrossover(chromosomeA: Body, chromosomeB: Body) -> (childA: Body, childB: Body) {
-        let point1 = Int(arc4random_uniform(UInt32(chromosomeA.count)))
-        let point2 = Int(arc4random_uniform(UInt32(chromosomeB.count)))
-        let crossoverA = Swift.min(point1, point2)
-        var childGenesA = Body()
-        var childGenesB = Body()
-        for i in 0 ..< chromosomeA.count {
-            if i < crossoverA {
-                childGenesA.append(chromosomeA[i])
-                childGenesB.append(chromosomeB[i])
-            } else {
-                childGenesA.append(chromosomeB[i])
-                childGenesB.append(chromosomeA[i])
-            }
-        }
-        return (childA: childGenesA, childB: childGenesB)
-    }
-    
-    private func swapDuplicates( genesA: inout Body, _ genesB: inout Body) {
-        var duplicatesA: [Organ : Int] = duplicatesForGenes(genes: genesA)
-        var duplicatesB: [Organ : Int] = duplicatesForGenes(genes: genesB)
-        while duplicatesA.count > 0 {
-            guard let a = duplicatesA.popFirst(),let b = duplicatesB.popFirst() else { continue }
-            genesA[a.1] = b.0
-            genesB[b.1] = a.0
-        }
-    }
-    
-    private func duplicatesForGenes(genes: Body) -> [Organ: Int] {
-        var set = Set<Organ>()
-        var duplicates: [Organ : Int] = [:]
-        var index = 0
-        for gene in genes {
-            if set.contains(gene) {
-                duplicates[gene] = index
-            } else {
-                set.insert(gene)
-            }
-            index += 1
-        }
-        return duplicates
     }
     
     private func randomSelection() -> (index: Int, person: Person) {
@@ -261,5 +249,10 @@ extension Bodies {
             weight = Swift.min(weight, result)
         }
         return weight
+    }
+    
+    func randomSelection() -> (index: Int, body: Body) {
+        let index = Int(arc4random_uniform(UInt32(self.count)))
+        return (index, self[index])
     }
 }

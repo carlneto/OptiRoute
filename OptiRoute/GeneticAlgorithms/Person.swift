@@ -14,6 +14,22 @@ class Person: Hashable {
         self.body = body
     }
     
+    var turns: Int {
+        let n = body.count
+        let x = Double(n)
+        var ans = 1.0
+        if n < 5 {
+            ans = 146
+        } else if n < 30 {
+            ans = (((2 / 1875 - (11 * (x - 10)) / 187500) * (x - 20) * (x - 15) + 3 / 50) * (x - 25) - 1 / 5) * (x - 30) + 8
+        } else if n < 90 {
+            ans = 8
+        } else if n < 120 {
+            ans = (90 - x) / 5 + 7
+        }
+        return Int(ans.rounded())
+    }
+    
     var str: String {
         var ret = "Muscles: [\n"
         for (i, a) in self.body.enumerated() {

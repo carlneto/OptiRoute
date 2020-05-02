@@ -78,7 +78,38 @@ extension Array where Element: FloatingPoint {
     }
 }
 
-class BenchTimer {
+final class Atomic<A> {
+    private let q = DispatchQueue(label: "Atomic serial queue")
+    private var v: A
+    init(_ value: A) {
+        self.v = value
+    }
+    var value: A {
+        get { return q.sync { self.v } }
+        set { self.mutate { $0 = newValue } }
+    }
+    func mutate(_ transform: (inout A) -> ()) {
+        q.sync { transform(&self.v) }
+    }
+}
+extension Atomic where A == Int {
+    func increase() {
+        mutate { $0 += 1 }
+    }
+    var increased: A {
+        increase()
+        return value
+    }
+    func decrease() {
+        mutate { $0 -= 1 }
+    }
+    var decreased: A {
+        decrease()
+        return value
+    }
+}
+
+final class BenchTimer {
     
     var startTime = CFAbsoluteTimeGetCurrent()
     

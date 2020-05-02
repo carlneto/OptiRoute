@@ -76,6 +76,7 @@ class ViewController: UIViewController {
     }
     
     private func drawRoute(_ body: Body, isRound: Bool = true) {
+        self.mapView.layer.sublayers?.removeAll()
         var organs = body
         guard !organs.isEmpty else { return }
         guard let firstOrgan = organs.first, let firstLoc = firstOrgan.content as? CGPoint else { return }
@@ -115,6 +116,7 @@ class ViewController: UIViewController {
     }
     
     @IBAction func startTap() {
+        generationLbl.text = "Locations: \(locations.count)"
         guard locations.count > 2 else { return }
         startBtn.isEnabled = false
         clearBtn.isEnabled = false
