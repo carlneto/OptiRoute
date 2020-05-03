@@ -14,20 +14,20 @@ class Person: Hashable {
         self.body = body
     }
     
-    var turns: Int {
+    func turns() -> Int {
         let n = body.count
         let x = Double(n)
-        var ans = 1.0
         if n < 5 {
-            ans = 146
+            return 146
         } else if n < 30 {
-            ans = (((2 / 1875 - (11 * (x - 10)) / 187500) * (x - 20) * (x - 15) + 3 / 50) * (x - 25) - 1 / 5) * (x - 30) + 8
+            let ans = (((2 / 1875 - (11 * (x - 10)) / 187500) * (x - 20) * (x - 15) + 3 / 50) * (x - 25) - 1 / 5) * (x - 30) + 8
+            return Int(ans.rounded())
         } else if n < 90 {
-            ans = 8
-        } else if n < 120 {
-            ans = (90 - x) / 5 + 7
+            return 8
+        } else if n < 115 {
+            return Int(((90 - x) / 5 + 7).rounded())
         }
-        return Int(ans.rounded())
+        return 2
     }
     
     var str: String {
@@ -96,7 +96,6 @@ extension Body {
     /// Body operators
     
     func sort() -> [Body] {
-        //return []
         //=let t = BenchTimer()
         let bodies = [self,
                       self.sortedFirst(),
@@ -131,7 +130,7 @@ extension Body {
     }
     
     private func sorted(from one: Organ, and two: Organ? = nil) -> Body {
-        let tot = self.count
+        let lenght = self.count
         var baseBody = self
         var organs = [Organ]()
         func move(organ: Organ, toFront: Bool = false) -> Organ {
@@ -143,7 +142,7 @@ extension Body {
         if let two = two {
             var o1 = move(organ: one)
             var o2 = move(organ: two)
-            while organs.count < tot, baseBody.count > 0 {
+            while organs.count < lenght, baseBody.count > 0 {
                 let no1 = o1.neighbor(body: baseBody)
                 let no2 = o2.neighbor(body: baseBody)
                 let t1 = no1 ?? no2, t2 = no2 ?? no1
@@ -168,16 +167,50 @@ extension Body {
             }
         } else {
             var o1 = move(organ: one)
-            while organs.count < tot, baseBody.count > 0, let n1 = o1.neighbor(body: baseBody) {
+            while organs.count < lenght, baseBody.count > 0, let n1 = o1.neighbor(body: baseBody) {
                 o1 = move(organ: n1)
             }
         }
-        guard organs.count == tot else { return self }
+        guard organs.count == lenght else { return self }
         return organs
     }
     
-    func uncross() -> [Body] {
-        //return []
+    func uncross(minGap: Int = 4) -> Body {
+        //=let t = BenchTimer()
+        var vipBody = self
+        vipBody = vipBody.uncrossed(minGap: minGap, maxTime: 0.036)
+        vipBody.reverse()
+        vipBody = vipBody.uncrossed(minGap: minGap, maxTime: 0.036)
+        //=print("\nu t_\(t.elapsed.zeros(3))", terminator: " ")
+        return vipBody
+    }
+    
+    func uncrossed(minGap: Int = 4, maxTime: Double = 0.007) -> Body {
+        let t = BenchTimer()
+        let lenght = self.count
+        let selfWeight = self.calculateWeight()
+        var body = self
+        var found = 0
+        for gap in minGap ... lenght {
+            let interval = lenght - gap
+            for ia in 0 ..< interval {
+                guard t.elapsed < maxTime else { break }
+                let ib = ia + 1, ic = ia + gap, id = ic + 1
+                let a = body[mod: ia], b = body[mod: ib], c = body[mod: ic], d = body[mod: id]
+                guard a.muscleTo(other: c) + b.muscleTo(other: d) < a.muscleTo(other: b) + c.muscleTo(other: d),
+                    let newVip = body.reversed(between: ia, and: id) else { continue }
+                let newWeight = newVip.calculateWeight()
+                if newWeight < selfWeight {
+                    body = newVip
+                    found += 1
+                    //=print("\nz f\(found) t_\(t.elapsed.zeros(3))", terminator: " ")
+                }
+            }
+        }
+        return body
+    }
+    
+    func dispart() -> [Body] {
         let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
@@ -200,16 +233,14 @@ extension Body {
                 }
             }
         }
-        //=print("\nu\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
+        //=print("\nd\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
-    
+        
     func collect() -> [Body] {
-        //return []
         let t = BenchTimer()
         var bodies = [Body]()
-        let tot = self.count
-        guard tot > 3 else { return bodies }
+        guard self.count > 3 else { return bodies }
         var candidates = [(from: String, to: String, gain: Double)]()
         var body = self
         let weaknessMax = body.average() * 2
@@ -254,9 +285,8 @@ extension Body {
     }
     
     func release() -> [Body] {
-        //return []
         let t = BenchTimer()
-        let tot = self.count
+        let lenght = self.count
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
         var indexes = Set<Int>()
@@ -273,7 +303,7 @@ extension Body {
             }
             body1.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: false)
             body2.move(from: candidate.peakIdx, to: candidate.neigborIdx, before: true)
-            guard body1.count == tot, body2.count == tot else {
+            guard body1.count == lenght, body2.count == lenght else {
                 body1 = self
                 body2 = self
                 indexes = Set<Int>()
@@ -291,34 +321,32 @@ extension Body {
         return bodies//.swapped()
     }
     
-    func untwists(interval: Int = 12) -> [Body] {
-        //return []
+    func untwist(interval: Int = 5) -> [Body] {
         let t = BenchTimer()
         var bodies = [Body]()
         var vip = self
         for i in 4 ... Swift.max(4, interval) {
             guard t.elapsed < 0.020 else { break }
-            if let untwist = vip.untwist(interval: i) {
+            if let untwist = vip.untwisted(interval: i) {
                 bodies.append(untwist)
                 vip = untwist
             }
-            //print("\nx\(self.progress(from: [vip])) i\(i)\tm_\(t.elapsed.zeros(3))", terminator: " ")
         }
         //=print("\nt\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
     
-    private func untwist(interval: Int) -> Body? {
-        let tot = self.count
-        guard tot > 2, 3 ..< Swift.max(3, tot / 2) ~= interval else { return nil }
+    private func untwisted(interval: Int) -> Body? {
+        let lenght = self.count
+        guard lenght > 2, 3 ..< Swift.max(3, lenght / 2) ~= interval else { return nil }
         var body = self
-        for i in 0 ..< tot {
+        for i in 0 ..< lenght {
             if let costs = body.costs(from: i, by: interval), costs.new < costs.old,
                 let aBody = body.reversed(between: i, and: i + interval) {
                 body = aBody
             }
         }
-        guard body.count == tot else { return nil }
+        guard body.count == lenght else { return nil }
         return body
     }
     

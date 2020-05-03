@@ -38,6 +38,11 @@ extension Array {
         guard 0 ..< self.count ~= idx, self.count > 0 else { return nil }
         return self.remove(at: idx)
     }
+    mutating func reverse(between index1: Int, and index2: Int) {
+        if let ans = reversed(between: index1, and: index2) {
+            self = ans
+        }
+    }
     func reversed(between index1: Int, and index2: Int) -> Array? {
         guard index1 != index2, 0..<count ~= index1, 0..<count ~= index2 else { return nil }
         if index1 > index2 {
@@ -154,6 +159,20 @@ extension Int {
         straight.append(included)
         invertedInMiddle.append(included)
         return (straight, invertedInMiddle)
+    }
+    mutating func increase() {
+        self += 1
+    }
+    mutating func increased() -> Int {
+        self += 1
+        return self
+    }
+    mutating func decrease() {
+        self -= 1
+    }
+    mutating func decreased() -> Int {
+        self -= 1
+        return self
     }
 }
 
