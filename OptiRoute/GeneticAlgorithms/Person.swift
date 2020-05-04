@@ -236,19 +236,19 @@ extension Body {
         //=print("\nd\(self.progress(from: bodies)) \tt_\(t.elapsed.zeros(3))", terminator: " ")
         return bodies
     }
-        
+    
     func collect() -> [Body] {
         let t = BenchTimer()
         var bodies = [Body]()
         guard self.count > 3 else { return bodies }
         var candidates = [(from: String, to: String, gain: Double)]()
         var body = self
-        let weaknessMax = body.average() * 2
+        let deviation = body.average() * 2
         for (i, a) in body.enumerated() {
             guard t.elapsed < 0.025 else { break }
             let c = body[mod: i + 1]
             let ac = a.muscleTo(other: c)
-            let ab_s = a.neighbors(body: body, maxWeakness: weaknessMax)
+            let ab_s = a.neighbors(body: body, maxWeakness: deviation)
             var neighborName = ""
             var gainWeight = Double(Int.max)
             for ab in ab_s {

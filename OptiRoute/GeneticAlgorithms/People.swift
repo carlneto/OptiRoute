@@ -20,7 +20,6 @@ extension People {
         while self.count < size {
             self.append(Person(body: body.shuffled()))
         }
-        //print("\ni \(count) best \(self.stats().vip!.weight.zeros(0))")
     }
     
     mutating func stats() -> (pop: People, weight: Double, vip: Person?) {

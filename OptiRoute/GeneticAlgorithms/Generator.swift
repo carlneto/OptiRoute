@@ -16,6 +16,7 @@ class Generator {
         self.isCircle = isCircle
         var body = Body()
         for organNameContent in organsNameContent {
+            guard !organNameContent.key.isEmpty else { return nil }
             body.appendOrgan(name: organNameContent.key, content: organNameContent.value)
         }
         ancestor = Person(body: muscles(body, !self.isCircle))
@@ -31,10 +32,10 @@ class Generator {
         let t = BenchTimer()
         let bodyCount = self.ancestor.body.count
         guard bodyCount > 2 else { return }
-        let timeLimit = Swift.min(45.0, Double(bodyCount / 2))
+        let timeLimit = Swift.min(30.0, Double(bodyCount / 3))
         let peopleSize = Swift.min(512, 4 * bodyCount)
         let turns = president.value.turns()
-        var tries = turns //* 2
+        var tries = turns
         evolving.value = turns
         //print("\npop \(peopleSize) r\(turns) bodyCount:\(bodyCount) t\(timeLimit.zeros(1)) ... ", terminator: " ")
         for i in 1...turns {

@@ -1,10 +1,3 @@
-//
-//  Extensions.swift
-//  OptiRoute
-//
-//  Created by Carlos Neto on 08/04/2020.
-//  Copyright © 2020 Carlos Neto. All rights reserved.
-//
 import UIKit
 
 extension Array {

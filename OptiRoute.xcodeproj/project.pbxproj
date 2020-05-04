@@ -53,6 +53,7 @@
 		AF26D991243DE45900393514 /* GeneticAlgorithms */ = {
 			isa = PBXGroup;
 			children = (
+				AF26D98B243DD62700393514 /* Extensions.swift */,
 				AF26D98D243DE3FC00393514 /* Organ.swift */,
 				AF26D98F243DE44C00393514 /* Person.swift */,
 				AF26D994243DEABC00393514 /* People.swift */,
@@ -66,7 +67,6 @@
 			children = (
 				AFA590502438A33200FF4BDC /* AppDelegate.swift */,
 				AFA590522438A33200FF4BDC /* SceneDelegate.swift */,
-				AF26D98B243DD62700393514 /* Extensions.swift */,
 				AFA5905E2438A33600FF4BDC /* Info.plist */,
 				AFA590642438A40100FF4BDC /* OptiRoute.entitlements */,
 				AFA590592438A33600FF4BDC /* Assets.xcassets */,

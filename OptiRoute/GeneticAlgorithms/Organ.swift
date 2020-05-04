@@ -15,14 +15,16 @@ struct Organ: Equatable, Hashable, Comparable {
     }
     
     func muscleTo(other: Organ) -> Double {
-        guard self.name != other.name else { fatalError("No muscle from (`\(name)`) to (`\(other.name )`).\n*See: `\(#function)`!") }
-        if let aWeight = Organ.edges[[self.name, other.name]] { return aWeight }
-        fatalError("Muscle from: `\(name)` to `\(other.name)`,\n is not in muscle estruture:\n \(Organ.edges).\n*See: `\(#function)`!")
+        if self.name != other.name, let aWeight = Organ.edges[[self.name, other.name]] {
+            return aWeight
+        }
+        return Double(Int.max)
     }
     
     func set(weight: Double, to other: Organ) {
-        guard self.name != other.name else { fatalError("No set muscle for (`\(name)`), to (`\(other.name )`).\n*See: `\(#function)`!") }
-        Organ.edges[[self.name, other.name]] = weight
+        if self.name != other.name {
+            Organ.edges[[self.name, other.name]] = weight
+        }
     }
     
     func neighbor(body: Body) -> Organ? {
@@ -44,7 +46,7 @@ struct Organ: Equatable, Hashable, Comparable {
         }
         return contiguous
     }
-  
+    
     func neighbors(body: Body) -> [(index: Int, organ: Organ, weakness: Double)] {
         guard body.count > 0 else { return [] }
         var arr = [(index: Int, organ: Organ, weakness: Double)]()
@@ -93,16 +95,12 @@ struct Organ: Equatable, Hashable, Comparable {
     }
     
     fileprivate static func create(name: String, content: Any) -> Organ {
-        if !name.isEmpty {
-            if let organ = Organ.uniqueBody[name] {
-                return organ
-            }
-            let newOrgan = Organ(name: name, core: content)
-            Organ.uniqueBody[name] = newOrgan
-            return newOrgan
-        } else {
-            fatalError("`\(name)` is empty.\n*See: `\(#function)`!")
+        if let organ = Organ.uniqueBody[name] {
+            return organ
         }
+        let newOrgan = Organ(name: name, core: content)
+        Organ.uniqueBody[name] = newOrgan
+        return newOrgan
     }
 }
 
@@ -110,24 +108,18 @@ typealias Body = [Organ]
 extension Body {
     
     mutating func appendOrgan(name: String, content core: Any) {
-        let organ = Organ.create(name: name, content: core)
-        self.append(organ)
+        self.append(Organ.create(name: name, content: core))
     }
     
     func index(of organName: String) -> Int? {
-        for i in 0 ..< count {
-            if self[i].name == organName {
-                return i
-            }
-        }
-        return nil
+        guard !organName.isEmpty else { return nil }
+        return self.firstIndex(where: { $0.name == organName })
     }
     
     func organ(by name: String) -> Organ? {
-        if !name.isEmpty, let organ = Organ.uniqueBody[name] {
-            return organ
-        }
-        return nil
+        guard !name.isEmpty else { return nil }
+        return self.first(where: { $0.name == name } )
+        
     }
     
     func muscleUltra(farest: Bool) -> Muscle? {
@@ -168,16 +160,16 @@ extension Body {
         let tot = self.count
         guard tot > 3 else { return arr }
         let body = self
-        let bodyAverage = body.average()
+        let deviation = body.average() * 2
         for (idx, curr) in body.enumerated() {
             let prev = body[mod: idx - 1]
             let next = body[mod: idx + 1]
             let ab = prev.muscleTo(other: curr)
             let bc = curr.muscleTo(other: next)
             let ac = prev.muscleTo(other: next)
-            let abc = ab + bc, doubleAverage = 2 * bodyAverage
-            guard ab > 0, bc > 0, ac > 0, abc > doubleAverage else { continue }
-            let sharpen = 1 - doubleAverage / abc
+            let abc = ab + bc
+            guard ab > 0, bc > 0, ac > 0, abc > deviation else { continue }
+            let sharpen = 1 - deviation / abc
             guard 0...1 ~= sharpen else { continue }
             let peak = Peak(index: idx,
                             prevOrgan: prev, currOrgan: curr, nextOrgan: next,
@@ -192,6 +184,7 @@ extension Body {
     func flatCandidates() -> [(peakIdx: Int, neigborIdx: Int, costRate: Double)] {
         let t = BenchTimer()
         var candidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
+        let deviation = self.average() * 2
         let peaks = self.peakests()
         for peak in peaks {
             guard t.elapsed < 0.010 else { break }
@@ -199,7 +192,7 @@ extension Body {
             let actualCost = peak.prevEdge + peak.nextEdge
             var neibhborCandidates = [(peakIdx: Int, neigborIdx: Int, costRate: Double)]()
             let s = BenchTimer()
-            let neighbors = peak.neighbors(body: self, maximum: self.average() * 2)
+            let neighbors = peak.neighbors(body: self, maximum: deviation)
             for neighbor in neighbors {
                 guard neighbor.weakness > 0 else { continue }
                 let newCost = peak.oposEdge + neighbor.weakness
@@ -214,10 +207,8 @@ extension Body {
                 guard s.elapsed < 0.005 else { break }
                 candidates.append(neibhborCandidate)
             }
-            //=print("\ng\(neibhborCandidates.count) \ts_\(s.milliseconds.zeros(0))", terminator: " ")
         }
         candidates.sort { $0.costRate < $1.costRate }
-        //=print("\nf\(candidates.count) \tt_\(t.milliseconds.zeros(0))", terminator: " ")
         return candidates
     }
     
