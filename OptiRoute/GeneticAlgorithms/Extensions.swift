@@ -105,6 +105,9 @@ extension Atomic where A == Int {
         decrease()
         return value
     }
+    var str: String {
+        return "\(value)"
+    }
 }
 
 final class BenchTimer {
