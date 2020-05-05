@@ -188,6 +188,7 @@ extension Body {
     func uncrossed(minGap: Int = 4, maxTime: Double = 0.007) -> Body {
         let t = BenchTimer()
         let lenght = self.count
+        guard minGap <= lenght else { return self }
         let selfWeight = self.calculateWeight()
         var body = self
         var found = 0

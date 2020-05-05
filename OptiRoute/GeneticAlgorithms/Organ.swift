@@ -119,7 +119,6 @@ extension Body {
     func organ(by name: String) -> Organ? {
         guard !name.isEmpty else { return nil }
         return self.first(where: { $0.name == name } )
-        
     }
     
     func muscleUltra(farest: Bool) -> Muscle? {
