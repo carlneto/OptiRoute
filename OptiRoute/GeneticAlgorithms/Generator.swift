@@ -37,7 +37,7 @@ class Generator {
         let turns = president.value.turns()
         var tries = turns
         evolving.value = turns
-        //print("\npop \(peopleSize) r\(turns) bodyCount:\(bodyCount) t\(timeLimit.zeros(1)) ... ", terminator: " ")
+        print("\npop \(peopleSize) r\(turns) bodyCount:\(bodyCount) t\(timeLimit.zeros(1)) ... ", terminator: " ")
         for i in 1...turns {
             DispatchQueue.global().async {
                 var people = People(from: self.randomBody, size: peopleSize)

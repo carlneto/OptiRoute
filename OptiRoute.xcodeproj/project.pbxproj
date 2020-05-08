@@ -19,6 +19,10 @@
 		AFA590582438A33200FF4BDC /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AFA590562438A33200FF4BDC /* Main.storyboard */; };
 		AFA5905A2438A33600FF4BDC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AFA590592438A33600FF4BDC /* Assets.xcassets */; };
 		AFA5905D2438A33600FF4BDC /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AFA5905B2438A33600FF4BDC /* LaunchScreen.storyboard */; };
+		AFCE049324642DAB00CE8E0B /* OpenRouteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE049224642DAB00CE8E0B /* OpenRouteService.swift */; };
+		AFCE049524647D6E00CE8E0B /* MapBoxService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE049424647D6E00CE8E0B /* MapBoxService.swift */; };
+		AFCE049724648AEA00CE8E0B /* MapQuestMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE049624648AEA00CE8E0B /* MapQuestMatrix.swift */; };
+		AFCE049924648EA400CE8E0B /* GoogleMapsMatrix.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFCE049824648EA400CE8E0B /* GoogleMapsMatrix.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +41,10 @@
 		AFA5905C2438A33600FF4BDC /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		AFA5905E2438A33600FF4BDC /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AFA590642438A40100FF4BDC /* OptiRoute.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OptiRoute.entitlements; sourceTree = "<group>"; };
+		AFCE049224642DAB00CE8E0B /* OpenRouteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouteService.swift; sourceTree = "<group>"; };
+		AFCE049424647D6E00CE8E0B /* MapBoxService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapBoxService.swift; sourceTree = "<group>"; };
+		AFCE049624648AEA00CE8E0B /* MapQuestMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapQuestMatrix.swift; sourceTree = "<group>"; };
+		AFCE049824648EA400CE8E0B /* GoogleMapsMatrix.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleMapsMatrix.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +106,10 @@
 				AF26D991243DE45900393514 /* GeneticAlgorithms */,
 				AF39265A2438AC0C0017E6E6 /* Resources */,
 				AFA590542438A33200FF4BDC /* ViewController.swift */,
+				AFCE049224642DAB00CE8E0B /* OpenRouteService.swift */,
+				AFCE049424647D6E00CE8E0B /* MapBoxService.swift */,
+				AFCE049624648AEA00CE8E0B /* MapQuestMatrix.swift */,
+				AFCE049824648EA400CE8E0B /* GoogleMapsMatrix.swift */,
 				AFA590562438A33200FF4BDC /* Main.storyboard */,
 			);
 			path = OptiRoute;
@@ -175,13 +187,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AFCE049524647D6E00CE8E0B /* MapBoxService.swift in Sources */,
 				AF26D995243DEABC00393514 /* People.swift in Sources */,
 				AFA590552438A33200FF4BDC /* ViewController.swift in Sources */,
 				AFA590512438A33200FF4BDC /* AppDelegate.swift in Sources */,
+				AFCE049324642DAB00CE8E0B /* OpenRouteService.swift in Sources */,
 				AF26D98E243DE3FC00393514 /* Organ.swift in Sources */,
 				AF26D98C243DD62700393514 /* Extensions.swift in Sources */,
 				AF26D993243DE83000393514 /* Generator.swift in Sources */,
+				AFCE049924648EA400CE8E0B /* GoogleMapsMatrix.swift in Sources */,
 				AF26D990243DE44C00393514 /* Person.swift in Sources */,
+				AFCE049724648AEA00CE8E0B /* MapQuestMatrix.swift in Sources */,
 				AFA590532438A33200FF4BDC /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
