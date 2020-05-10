@@ -58,7 +58,7 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		AF26D991243DE45900393514 /* GeneticAlgorithms */ = {
+		AF26D991243DE45900393514 /* GA */ = {
 			isa = PBXGroup;
 			children = (
 				AF26D98B243DD62700393514 /* Extensions.swift */,
@@ -67,7 +67,7 @@
 				AF26D994243DEABC00393514 /* People.swift */,
 				AF26D992243DE83000393514 /* Generator.swift */,
 			);
-			path = GeneticAlgorithms;
+			path = GA;
 			sourceTree = "<group>";
 		};
 		AF39265A2438AC0C0017E6E6 /* Resources */ = {
@@ -103,7 +103,7 @@
 		AFA5904F2438A33200FF4BDC /* OptiRoute */ = {
 			isa = PBXGroup;
 			children = (
-				AF26D991243DE45900393514 /* GeneticAlgorithms */,
+				AF26D991243DE45900393514 /* GA */,
 				AF39265A2438AC0C0017E6E6 /* Resources */,
 				AFA590542438A33200FF4BDC /* ViewController.swift */,
 				AFCE049224642DAB00CE8E0B /* OpenRouteService.swift */,
