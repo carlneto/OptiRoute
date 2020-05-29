@@ -149,6 +149,9 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        #if compiler(>=5.1)
+        if #available(iOS 13.0, *) { overrideUserInterfaceStyle = .light }
+        #endif
         let ptCenter = CLLocation(latitude: 39.464345, longitude: -8.1950642)
         self.mapView.centerToLocation(ptCenter, regionRadius: 1_200_000)
         let region = MKCoordinateRegion(center: ptCenter.coordinate, latitudinalMeters: 250_000, longitudinalMeters: 100_000)

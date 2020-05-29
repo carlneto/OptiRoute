@@ -12,16 +12,16 @@ extension Array {
         return Array(self.prefix(upTo: Swift.min(index, self.count)))
     }
     func modIndex(_ index: Index) -> Index {
-        return ((index % count) + count) % count
+        return ((index % self.count) + self.count) % self.count
     }
     mutating func swapIndexes(i: Int, j: Int) {
-        swapAt(modIndex(i), modIndex(j))
+        self.swapAt(modIndex(i), modIndex(j))
     }
     mutating func move(from sourceIndex: Int, to destinationIndex: Int, before: Bool = true) {
         let fromIdx = modIndex(sourceIndex)
         let toIdx = before ? modIndex(destinationIndex) : modIndex(destinationIndex + 1)
         guard fromIdx != toIdx else { return }
-        guard abs(toIdx - fromIdx) != 1 else {
+        guard Swift.abs(toIdx - fromIdx) != 1 else {
             self.swapAt(fromIdx, toIdx)
             return
         }
@@ -37,27 +37,27 @@ extension Array {
         }
     }
     func reversed(between index1: Int, and index2: Int) -> Array? {
-        guard index1 != index2, 0..<count ~= index1, 0..<count ~= index2 else { return nil }
+        guard index1 != index2, 0..<self.count ~= index1, 0..<self.count ~= index2 else { return nil }
         if index1 > index2 {
-            let reversed = Array((self[(index1 + 1) ..< count] + self[0 ..< index2]).reversed())
+            let reversed = Array((self[(index1 + 1) ..< self.count] + self[0 ..< index2]).reversed())
             let arr = Array(self[index2 ... index1] + reversed)
-            let cut = count - index2
-            return Array(arr[cut ..< count] + arr[0 ..< cut])
+            let cut = self.count - index2
+            return Array(arr[cut ..< self.count] + arr[0 ..< cut])
         } else {
             let arr0 = self[0 ... index1]
             let arr1 = Array(self[(index1 + 1) ..< index2].reversed())
-            let arr2 = self[index2 ..< count]
+            let arr2 = self[index2 ..< self.count]
             return arr0 + arr1 + arr2
         }
     }
     func mixUp() -> [Element] {
-        return sorted(by: { (_, _) -> Bool in
+        return self.sorted(by: { (_, _) -> Bool in
             return arc4random() < arc4random()
         })
     }
     func chunk(max size: Int) -> [[Element]] {
-        return stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
+        return Swift.stride(from: 0, to: self.count, by: size).map {
+            Array(self[$0 ..< Swift.min($0 + size, self.count)])
         }
     }
 }
@@ -174,11 +174,11 @@ extension Int {
 
 extension RangeReplaceableCollection {
     mutating func rotate(shift: Int) {
-        let positions = ((shift % count) + count) % count
-        let index = self.index(startIndex, offsetBy: positions, limitedBy: endIndex) ?? endIndex
+        let positions = ((shift % self.count) + self.count) % self.count
+        let index = self.index(self.startIndex, offsetBy: positions, limitedBy: self.endIndex) ?? self.endIndex
         let slice = self[..<index]
-        removeSubrange(..<index)
-        insert(contentsOf: slice, at: endIndex)
+        self.removeSubrange(..<index)
+        self.insert(contentsOf: slice, at: self.endIndex)
     }
     func rotated(shift: Int) -> Self {
         var arr = self
