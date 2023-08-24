@@ -60,7 +60,7 @@ class Generator {
                                 if newBest.weight < self.president.value.weight {
                                     self.president.value = newBest
                                     if self.evolving.value > 0 {
-                                        self.onNewGeneration?(newBest.body, Int(newBest.weight.rounded()))
+                                        self.onNewGeneration?(newBest.body, newBest.weight.rounded().intValue)
                                     }
                                 }
                             }
@@ -111,6 +111,6 @@ class Generator {
                 vipBody.reverse()
             }
         }
-        self.onEvolutionEnd?(vipBody, Int(vip.weight.rounded()), self.isCircle)
+        self.onEvolutionEnd?(vipBody, vip.weight.rounded().intValue, self.isCircle)
     }
 }

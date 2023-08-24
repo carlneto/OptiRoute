@@ -143,6 +143,11 @@ extension Double {
     func zeros(_ decimals: Int) -> String {
         return String(format: "%.\(decimals)f", self)
     }
+    var intValue: Int {
+        guard self < Double(Int.min) else { return Int.min }
+        guard self < Double(Int.max) else { return Int.max }
+        return Int(self)
+    }
 }
 
 extension Int {
