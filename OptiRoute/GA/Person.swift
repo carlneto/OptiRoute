@@ -1,4 +1,5 @@
 import UIKit
+import UtilsPackage
 
 class Person: Hashable {
     
@@ -34,7 +35,7 @@ class Person: Hashable {
         var ret = "Muscles: [\n"
         for (i, a) in self.body.enumerated() {
             let b = self.body[mod: i + 1]
-            ret += "\t\t\t\(a.name)\t\t(\(a.muscleTo(other: b).zeros(1)))\t\t\(b.name)\n"
+            ret += "\t\t\t\(a.name)\t\t(\(a.muscleTo(other: b).str1))\t\t\(b.name)\n"
         }
         return ret + "\t\t]"
     }
@@ -84,7 +85,7 @@ extension Body {
     func progress(from bodies: Bodies) -> String {
         let progrss = bodies.best() - self.calculateWeight()
         if progrss < 0 {
-            return " \(bodies.count) \t\(progrss.zeros(0))"
+            return " \(bodies.count) \t\(progrss.str0)"
         }
         return " \(bodies.count) \t-0"
     }

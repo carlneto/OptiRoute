@@ -143,15 +143,15 @@ extension Body {
         return arr
     }
     
-    func std() -> Double {
+    func std() -> Double? {
         var arr = [Double]()
         var previous = last
         for actual in self {
             if let prev = previous { arr.append(prev.muscleTo(other: actual)) }
             previous = actual
         }
-        let standardDeviation = arr.std()
-        return standardDeviation
+        let _std = arr.standardDeviation
+        return _std
     }
     
     func peakests() -> Peaks {
@@ -239,7 +239,7 @@ struct Muscle: Comparable {
     }
     
     var str: String {
-        return "(index: \(index), previous: \(previous.str), weakness: \(weakness.zeros(1)), actual: \(actual.str))"
+        return "(index: \(index), previous: \(previous.str), weakness: \(weakness.str1), actual: \(actual.str))"
     }
 }
 
@@ -294,7 +294,7 @@ struct Peak: Comparable {
     }
     
     var str: String {
-        return "(index: \(index), prevOrgan: \(prevOrgan.name), currOrgan: \(currOrgan.name), nextOrgan: \(nextOrgan.name), prevEdge: \(prevEdge.zeros(1)), nextEdge: \(nextEdge.zeros(1)), oposEdge: \(oposEdge.zeros(1)), sharpening: \(sharpening.zeros(3)))"
+        return "(index: \(index), prevOrgan: \(prevOrgan.name), currOrgan: \(currOrgan.name), nextOrgan: \(nextOrgan.name), prevEdge: \(prevEdge.str1), nextEdge: \(nextEdge.str1), oposEdge: \(oposEdge.str1), sharpening: \(sharpening.str1))"
     }
     
     static func < (lhs: Peak, rhs: Peak) -> Bool {

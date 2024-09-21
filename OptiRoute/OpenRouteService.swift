@@ -15,7 +15,7 @@ struct Location: Codable, Equatable {
     var str: String {
         guard let location = coordinate, location.count == 2 else { return "" }
         let left = location[mod: 1], right = location[mod: 0]
-        return "\(left.zeros(6)),\(right.zeros(6))"
+        return "\(left.str6),\(right.str6)"
     }
     static func == (lhs: Location, rhs: Location) -> Bool {
         guard lhs.snapped_distance == rhs.snapped_distance else { return false }
