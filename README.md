@@ -95,12 +95,3 @@ print("Total distance: \(totalDistance) meters")
 ## 📄 License
 
 This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
-
----
-
-## 🌐 Links
-
-* [GitHub Repository](https://github.com/YOUR-USERNAME/OptiRoute)
-* [Documentation](https://github.com/YOUR-USERNAME/OptiRoute/wiki)
-
-```
