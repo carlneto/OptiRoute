@@ -51,7 +51,7 @@ let package = Package(
         .iOS(.v17), .macOS(.v13)
     ],
     dependencies: [
-        .package(url: "https://github.com/YOUR-USERNAME/OptiRoute.git", from: "1.0.0")
+        .package(url: "https://github.com/carlneto/OptiRoute.git", from: "1.0.0")
     ],
     targets: [
         .target(
