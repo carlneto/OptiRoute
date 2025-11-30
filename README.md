@@ -38,7 +38,7 @@ let package = Package(
     ],
     dependencies: [
         // Substitua pelo URL real do repositório
-        .package(url: "https://github.com/SEU-UTILIZADOR/OptiRoute.git", from: "1.0.0")
+        .package(url: "https://github.com/carlneto/OptiRoute.git", from: "1.0.0")
     ],
     targets: [
         .target(
