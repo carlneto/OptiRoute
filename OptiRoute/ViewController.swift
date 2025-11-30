@@ -1,7 +1,7 @@
 import MapKit
 
 class ViewController: UIViewController, UIGestureRecognizerDelegate {
-   
+
    @IBOutlet weak var mapView: MKMapView!
    @IBOutlet weak var generationLbl: UILabel!
    @IBOutlet weak var startBtn: UIButton!
@@ -9,23 +9,23 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
    @IBOutlet weak var undoBtn: UIButton!
    @IBOutlet weak var clearBtn: UIButton!
    @IBOutlet weak var sampleBtn: UIButton!
-   
+
    private var routes = [[String] : MKRoute]()
    private var weights = [[String] : Double]()
    let userLocations = "locations2"
    var generator: Generator?
-   
+
    var locations = [String : CLLocationCoordinate2D]() {
       didSet {
          generationLbl.text = "Locations: \(locations.count)"
       }
    }
-   
+
    func add(location: CLLocationCoordinate2D) {
       locations["\(self.locations.count)"] = location
       //setRoutes()
    }
-   
+
    func setRoutes() {
       var locs = [CLLocationCoordinate2D]()
       for loc in locations {
@@ -48,7 +48,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
          print(self.weights)
       }
    }
-   
+
    func setRoutes_2() {
       var locs = [[Double]]()
       for loc in locations {
@@ -70,7 +70,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
          print(self.weights)
       }
    }
-   
+
    func setRoutes_1() {
       if self.locations.count > 0 {
          var reqs = [(source: CLLocationCoordinate2D, destination: CLLocationCoordinate2D)]()
@@ -121,7 +121,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
          }
       }
    }
-   
+
    func setPolyline(source: CLLocationCoordinate2D, destination: CLLocationCoordinate2D) -> Void {
       let sourcePlacemark = MKPlacemark(coordinate: source, addressDictionary: nil)
       let destinationPlacemark = MKPlacemark(coordinate: destination, addressDictionary: nil)
@@ -146,7 +146,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
          }
       }
    }
-   
+
    override func viewDidLoad() {
       super.viewDidLoad()
 #if compiler(>=5.1)
@@ -159,34 +159,34 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       let zoomRange = MKMapView.CameraZoomRange(maxCenterCoordinateDistance: 150_000)
       self.mapView.setCameraZoomRange(zoomRange, animated: true)
       self.mapView.delegate = self
-      
+
       let gesture = UILongPressGestureRecognizer(target: self, action: #selector(tap(sender:)))
       gesture.delegate = self
       self.mapView.addGestureRecognizer(gesture)
    }
-   
+
    override func viewDidAppear(_ animated: Bool) {
       super.viewDidAppear(animated)
-//      var locsArray = Array(CLLocationCoordinate2D.locs())
-//      locsArray.shuffle()
-//      var locs = [String : CLLocationCoordinate2D]()
-//      for (key, value) in locsArray {
-//         locs[key] = value
-//      }
+      //      var locsArray = Array(CLLocationCoordinate2D.locs())
+      //      locsArray.shuffle()
+      //      var locs = [String : CLLocationCoordinate2D]()
+      //      for (key, value) in locsArray {
+      //         locs[key] = value
+      //      }
       let locs = CLLocationCoordinate2D.locs()
       for i in 0..<locs.count {
          guard let loc = locs["\(i)"] else { fatalError() }
          addAnnotation(location: loc)
       }
    }
-   
+
    @objc func tap(sender: UILongPressGestureRecognizer) {
       guard sender.state == .ended, self.startBtn.isEnabled  else { return }
       let locationInView = sender.location(in: self.mapView)
       let locationOnMap = self.mapView.convert(locationInView, toCoordinateFrom: self.mapView)
       self.addAnnotation(location: locationOnMap)
    }
-   
+
    func addAnnotation(location: CLLocationCoordinate2D) {
       let annotation = MyPointAnnotation()
       annotation.coordinate = location
@@ -199,7 +199,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       self.mapView.selectAnnotation(annotation, animated: false)
       self.add(location: location)
    }
-   
+
    private func resetLocations(arr: [String]) {
       "locations".keyToRemoveObject(sync: false)
       "locations1".keyToRemoveObject(sync: false)
@@ -214,7 +214,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       }
       self.locations = locs
    }
-   
+
    @IBAction func startTap() {
       self.generationLbl.text = "Locations: \(self.locations.count)"
       guard self.locations.count > 2 else { return }
@@ -268,7 +268,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
                   let point = MyPointAnnotation()
                   point.coordinate = loc
                   point.title = "\(organ.name)"
-                  
+
                   if idx == 0 {
                      point.subtitle = "S"
                      point.isStartingPoint = true
@@ -296,7 +296,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       }
       self.generator?.startEvolution()
    }
-   
+
    @IBAction func stopTap() {
       self.generator?.stopEvolution()
       self.startBtn.isEnabled = true
@@ -304,12 +304,12 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
       self.undoBtn.isEnabled = true
       self.sampleBtn.isEnabled = true
    }
-   
+
    @IBAction func undoTap() {
       self.locations.removeValue(forKey: "\(locations.count - 1)")
       setRoutes()
    }
-   
+
    @IBAction func clearTap() {
       let txt = "Clear", ok = "Ok?"
       if let text = clearBtn.titleLabel?.text, text == ok {
@@ -331,7 +331,7 @@ class ViewController: UIViewController, UIGestureRecognizerDelegate {
          })
       }
    }
-   
+
    @IBAction func sampleTap() {
       print("sampleTap()")
       setRoutes()
@@ -347,38 +347,38 @@ private extension MKMapView {
                                                 longitudinalMeters: regionRadius)
       setRegion(coordinateRegion, animated: true)
    }
-   
+
    func calculateDistancefrom(departureDate: Date, arrivalDate: Date,
                               sourceLocation: MKMapItem, destinationLocation: MKMapItem,
                               doneSearching: @escaping (_ distance: CLLocationDistance) -> Void) {
-      
+
       let request: MKDirections.Request = MKDirections.Request()
-      
+
       request.departureDate = departureDate
       request.arrivalDate = arrivalDate
-      
+
       request.source = sourceLocation
       request.destination = destinationLocation
-      
+
       request.requestsAlternateRoutes = true
       request.transportType = .automobile
-      
+
       let directions = MKDirections(request: request)
       directions.calculate { (directions, error) in
          if var routeResponse = directions?.routes {
             routeResponse.sort(by: {$0.expectedTravelTime <
                $1.expectedTravelTime})
             let quickestRouteForSegment: MKRoute = routeResponse[0]
-            
+
             doneSearching(quickestRouteForSegment.distance)
          }
       }
    }
-   
+
    func getDistance(departureDate: Date, arrivalDate: Date,
                     startLocation: CLLocation, endLocation: CLLocation,
                     completionHandler: @escaping (_ distance: CLLocationDistance) -> Void) {
-      
+
       let destinationItem = MKMapItem(placemark: MKPlacemark(coordinate: startLocation.coordinate))
       let sourceItem = MKMapItem(placemark: MKPlacemark(coordinate: endLocation.coordinate))
       self.calculateDistancefrom(departureDate: departureDate, arrivalDate: arrivalDate,
@@ -390,45 +390,45 @@ private extension MKMapView {
 }
 
 extension ViewController: MKMapViewDelegate {
-   
+
    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
       let renderer = MKPolylineRenderer(overlay: overlay)
       renderer.strokeColor = UIColor.blue.withAlphaComponent(0.5)
       renderer.lineWidth = 5
       return renderer
    }
-   
+
    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
       if let point = annotation as? MyPointAnnotation {
          let identifier = "pointAnnotationView"
-         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKPinAnnotationView
-         
+         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? MKMarkerAnnotationView
+
          if annotationView == nil {
-            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+            annotationView = MKMarkerAnnotationView(annotation: annotation, reuseIdentifier: identifier)
             annotationView!.canShowCallout = true
          } else {
             annotationView!.annotation = point
          }
          if point.isStartingPoint {
-            annotationView!.pinTintColor = .red
+            annotationView!.markerTintColor = .red
          } else if point.isEndingPoint {
-            annotationView!.pinTintColor = .green
+            annotationView!.markerTintColor = .green
          } else {
-            annotationView!.pinTintColor = .blue
+            annotationView!.markerTintColor = .blue
          }
          return annotationView
       }
       return nil
    }
-   
+
    func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-      if let pinView = view as? MKPinAnnotationView {
+      if let pinView = view as? MKMarkerAnnotationView {
          print("tapped on pin: \(String(describing: pinView.annotation?.title))")
       } else {
          print("tapped on pin \(view.debugDescription)")
       }
    }
-   
+
    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, calloutAccessoryControlTapped control: UIControl) {
       if control == view.rightCalloutAccessoryView {
          if let annotationTitle = view.annotation?.title, let txt = annotationTitle {
@@ -596,7 +596,7 @@ extension CLLocationCoordinate2D {
 //         "96" : CLLocationCoordinate2D(latitude: 39.67664409285146,  longitude: -7.529075527259039),
 //         "97" : CLLocationCoordinate2D(latitude: 39.64845954391521,  longitude: -7.498546013863404),
 //         "98" : CLLocationCoordinate2D(latitude: 39.2914597224331,   longitude: -7.429587823647438),
-//         "99" : CLLocationCoordinate2D(latitude: 39.82187558174323,  longitude: -7.490879902214999), 
+//         "99" : CLLocationCoordinate2D(latitude: 39.82187558174323,  longitude: -7.490879902214999),
       ]
    }
 }

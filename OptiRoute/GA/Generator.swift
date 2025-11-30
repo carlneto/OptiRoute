@@ -80,7 +80,7 @@ class Generator {
                print("\(counter)", terminator: " ")
                genCount += 1
                guard counter < 0 || t.elapsed > timeLimit else { continue }
-               guard self.evolving.decreased == 0 else { break }
+               guard self.evolving.decreased() == 0 else { break }
                self.president.value = Person(body: self.president.value.body.uncross())
                print("\npop \(peopleSize) i\(i)_\(turns) bodyCount \(self.president.value.body.count) genCount \(genCount) t\(t.elapsed.str1)/\(timeLimit.str1) bestRoute \(self.president.value.weight.str0)")
                self.ended()
